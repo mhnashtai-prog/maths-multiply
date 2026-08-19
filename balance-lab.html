@@ -28,7 +28,27 @@
   h1{ margin:0; font-family:'Baloo 2',sans-serif; font-size:clamp(1.5rem,5vw,2.1rem); font-weight:800; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
   .sub{ font-weight:600; color:#3c6b3a; font-size:.85rem; margin-top:.15rem; }
 
-  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.6rem; }
+  /* ---------- header bag-count toggle ---------- */
+  .baseSection{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.4rem; margin-top:.75rem; }
+  .baseLabel{ font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .baseRow{ display:flex; gap:.5rem; }
+  .basePill{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; width:2.7rem; height:2.7rem;
+    border:none; border-radius:999px; cursor:pointer; background:rgba(255,255,255,.6); color:var(--ink);
+    box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s;
+  }
+  .basePill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .basePill.active{ background:var(--pop); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px rgba(255,255,255,.55); }
+
+  /* ---------- the live equation readout ---------- */
+  .factEquation{ position:relative; z-index:2; text-align:center; margin-top:.65rem; }
+  .factEquation .eq{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.5rem; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .factEquation .eqSub{ font-size:.8rem; font-weight:600; color:#3c6b3a; margin-top:.1rem; }
+  body.theme-dragon .factEquation .eq, body.theme-star .factEquation .eq{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .factEquation .eqSub, body.theme-star .factEquation .eqSub{ color:#C9C2F0; }
+  body.theme-star .factEquation .eqSub{ color:#AEC4F0; }
+
+  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.7rem; }
   .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
   .resetbtn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; background:rgba(255,255,255,.72); border:none; border-radius:999px; padding:.4rem .9rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); color:var(--ink); }
   .resetbtn:active{ transform:translateY(1px); }
@@ -36,7 +56,7 @@
   /* ---------- pile: what hasn't been placed yet ---------- */
   .pilewrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:1rem 1rem 0; }
   .pile{
-    width:100%; max-width:30rem; min-height:4.4rem; background:rgba(255,255,255,.3); border:3px dashed rgba(255,255,255,.55);
+    width:100%; max-width:34rem; min-height:4.4rem; background:rgba(255,255,255,.3); border:3px dashed rgba(255,255,255,.55);
     border-radius:16px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.4rem; padding:.6rem;
     transition:background .15s, border-color .15s;
   }
@@ -45,7 +65,7 @@
   .pilelabel{ text-align:center; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.15); margin-top:.3rem; }
 
   /* ---------- the scale row ---------- */
-  .scalesWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.3rem; }
+  .scalesWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.3rem; overflow-x:auto; }
   .scalesRow{ display:flex; align-items:flex-end; gap:1.4rem; padding:0 1rem; }
   .scaleUnit{ display:flex; flex-direction:column; align-items:center; }
   .track{
@@ -92,16 +112,26 @@
   .pill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
   .themePill{ font-size:1.35rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
   .themePill.active{ background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px var(--pop); }
-  .numPill{ font-size:.95rem; padding:.45rem 1rem; background:rgba(255,255,255,.55); color:var(--ink); }
-  .numPill.active{ background:var(--pop); color:#fff; }
+  .factPill{ font-size:.85rem; padding:.45rem .75rem; background:rgba(255,255,255,.55); color:var(--ink); }
+  .factPill.active{ background:var(--pop); color:#fff; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>⚖️ Balance Lab</h1>
-  <div class="sub">choose your objects and scales, then drag them onto the scales until every one sits level</div>
+  <div class="sub">pick how many bags, then pick a times-table fact — drag apples until every bag matches</div>
 </header>
+
+<div class="baseSection">
+  <div class="baseLabel">how many bags?</div>
+  <div class="baseRow" id="baseRow"></div>
+</div>
+
+<div class="factEquation">
+  <div class="eq" id="eqText"></div>
+  <div class="eqSub" id="eqSub"></div>
+</div>
 
 <div class="topbar">
   <button class="resetbtn" id="resetBtn">↺ Reset</button>
@@ -109,7 +139,7 @@
 </div>
 
 <div class="pilewrap"><div class="pile" id="pile"></div></div>
-<div class="pilelabel"><span id="pileRemain">0</span> waiting to be placed — drag one onto a scale</div>
+<div class="pilelabel"><span id="pileRemain">0</span> waiting to be placed — drag one onto a bag</div>
 
 <div class="scalesWrap"><div class="scalesRow" id="scalesRow"></div></div>
 
@@ -119,10 +149,8 @@
 <div class="pickers">
   <div class="pickerRow"><span class="pickerLabel">choose your world</span></div>
   <div class="pickerRow" id="themeRow"></div>
-  <div class="pickerRow"><span class="pickerLabel">how many objects?</span></div>
-  <div class="pickerRow" id="objRow"></div>
-  <div class="pickerRow"><span class="pickerLabel">how many scales?</span></div>
-  <div class="pickerRow" id="scaleRow"></div>
+  <div class="pickerRow"><span class="pickerLabel" id="factRowLabel">times table</span></div>
+  <div class="pickerRow" id="factRow"></div>
 </div>
 
 <script>
@@ -137,13 +165,22 @@ const THEMES = {
   star:   { label:'Stars', emoji:'⭐' },
 };
 let theme = 'apple';
-let totalObjects = 9;   // child-chosen, 4..10
-let scaleCount = 3;     // child-chosen, 2..5
-let counts = [];        // items placed on each scale
+
+/* ---------- the multiplication model ----------
+   base  = number of bags (scales) — set by the 5 header toggle pills (1..5)
+   n     = items per bag — set by the footer times-table strip (base×1 .. base×10)
+   Every (base, n) combination is, by construction, exactly solvable: put
+   n items in each of the base bags. There's no invalid state to reach. */
+let base = 3;   // 1..5
+let n = 3;      // 1..10, meaning "base × n"
+let counts = [];        // items currently placed on each bag/scale
 let soundOn = true, actx;
 
 const STEP = 18;       // px a tray sinks per item
 const TRACK_H = 200;   // must match .track height in CSS
+
+function scaleCount(){ return base; }
+function totalObjects(){ return base * n; }
 
 /* ---------- tiny synth: quiet taps only, no fanfare ---------- */
 function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
@@ -155,21 +192,21 @@ function tone(freq,dur,type,vol,delay){
   gain.gain.exponentialRampToValueAtTime(.001,t0+dur);
   osc.connect(gain).connect(actx.destination); osc.start(t0); osc.stop(t0+dur+.02);
 }
-const sfxPlace = n => tone(380+n*22,.08,'triangle',.11);
+const sfxPlace = k => tone(380+k*22,.08,'triangle',.11);
 const sfxRemove = () => tone(260,.08,'sine',.09);
 const sfxChime = () => [523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.09));
 soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
 
 /* ---------- setup / reset ---------- */
 function resetAll(){
-  counts = Array(scaleCount).fill(0);
+  counts = Array(scaleCount()).fill(0);
   celebrated = false;
   render();
 }
 resetBtn.onclick = resetAll;
 
 function remaining(){
-  return totalObjects - counts.reduce((a,b)=>a+b,0);
+  return totalObjects() - counts.reduce((a,b)=>a+b,0);
 }
 
 function render(){
@@ -210,15 +247,16 @@ function render(){
     track.appendChild(post);
     track.appendChild(tray);
 
-    const base = document.createElement('div'); base.className = 'base';
+    const baseEl = document.createElement('div'); baseEl.className = 'base';
     const label = document.createElement('div'); label.className = 'scaleLabel'; label.textContent = count;
 
     unit.appendChild(track);
-    unit.appendChild(base);
+    unit.appendChild(baseEl);
     unit.appendChild(label);
     scalesRow.appendChild(unit);
   });
 
+  updateEquation();
   updateNote();
 }
 
@@ -318,6 +356,18 @@ function resolveDrop(x, y, origin){
   render();
 }
 
+/* ---------- live equation readout ----------
+   Ties the abstract fact to the concrete picture at all times, e.g.
+   "3 × 4 = 12" plus "3 bags, 4 apples each" — updated as bags fill so
+   a child can watch the count-up match the fact in real time. */
+function updateEquation(){
+  const placedPerBagText = counts.every(c => c === counts[0])
+    ? `${counts[0]}`
+    : counts.join('+');
+  $('eqText').textContent = `${base} × ${n} = ${totalObjects()}`;
+  $('eqSub').textContent = `${base} bag${base===1?'':'s'}, ${n} apple${n===1?'':'s'} each`;
+}
+
 /* ---------- the read-out ----------
    Plain and factual while things are still in progress — but the moment
    every object is placed AND every scale sits at the same height, that's
@@ -332,11 +382,11 @@ function updateNote(){
   const isLevel = rem === 0 && allSame && counts[0] > 0;
 
   if (rem > 0){
-    levelNote.textContent = `${rem} still waiting — the scales won't all match until every object has a home`;
+    levelNote.textContent = `${rem} still waiting — every bag needs ${n} to match the fact`;
   } else if (allSame){
-    levelNote.textContent = `every scale holds ${counts[0]} — they're level!`;
+    levelNote.textContent = `every bag holds ${counts[0]} — that's ${base} × ${n} = ${totalObjects()}!`;
   } else {
-    levelNote.textContent = `all placed, but the scales sit at different heights — try moving some around`;
+    levelNote.textContent = `all placed, but the bags don't match yet — try moving some around`;
   }
 
   if (isLevel && !celebrated){
@@ -349,7 +399,7 @@ function updateNote(){
 
 function celebrate(){
   sfxChime();
-  showToast(`⚖️ Level! Every scale holds ${counts[0]}.`);
+  showToast(`⚖️ ${base} × ${n} = ${totalObjects()}!`);
   fireworks();
 }
 
@@ -387,6 +437,18 @@ function fireworks(){
 
 /* ---------- pickers ---------- */
 function buildPickers(){
+  // header: how many bags (1..5)
+  const baseRow = $('baseRow');
+  baseRow.innerHTML = '';
+  for (let b=1;b<=5;b++){
+    const btn = document.createElement('button');
+    btn.className = 'basePill' + (b === base ? ' active' : '');
+    btn.textContent = b;
+    btn.onclick = () => selectBase(b);
+    baseRow.appendChild(btn);
+  }
+
+  // world theme
   const themeRow = $('themeRow');
   themeRow.innerHTML = '';
   Object.entries(THEMES).forEach(([key, t]) => {
@@ -397,24 +459,16 @@ function buildPickers(){
     themeRow.appendChild(b);
   });
 
-  const objRow = $('objRow');
-  objRow.innerHTML = '';
-  for (let n=4;n<=10;n++){
+  // footer: the base's times table, base×1 .. base×10
+  $('factRowLabel').textContent = `the ${base}× table`;
+  const factRow = $('factRow');
+  factRow.innerHTML = '';
+  for (let i=1;i<=10;i++){
     const b = document.createElement('button');
-    b.className = 'pill numPill' + (n === totalObjects ? ' active' : '');
-    b.textContent = n;
-    b.onclick = () => selectTotal(n);
-    objRow.appendChild(b);
-  }
-
-  const scaleRow = $('scaleRow');
-  scaleRow.innerHTML = '';
-  for (let n=2;n<=5;n++){
-    const b = document.createElement('button');
-    b.className = 'pill numPill' + (n === scaleCount ? ' active' : '');
-    b.textContent = n;
-    b.onclick = () => selectScales(n);
-    scaleRow.appendChild(b);
+    b.className = 'pill factPill' + (i === n ? ' active' : '');
+    b.textContent = `${base}×${i}`;
+    b.onclick = () => selectFact(i);
+    factRow.appendChild(b);
   }
 }
 
@@ -425,15 +479,15 @@ function selectTheme(key){
   buildPickers();
   render();
 }
-function selectTotal(n){
-  if (n === totalObjects) return;
-  totalObjects = n;
+function selectBase(b){
+  if (b === base) return;
+  base = b;
   buildPickers();
   resetAll();
 }
-function selectScales(n){
-  if (n === scaleCount) return;
-  scaleCount = n;
+function selectFact(i){
+  if (i === n) return;
+  n = i;
   buildPickers();
   resetAll();
 }
