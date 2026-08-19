@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Draw & Multiply — draw it yourself, or watch it grow</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#BFE9F7; --sky-bot:#EAF7E0; --grass:#8FC26A; --grass-dark:#6FA84C;
+    --ink:#33422E; --ink-soft:#5B6B54; --card:#FFFDF6; --card-edge:#EBE1C8;
+    --pop:#8B6BD8; --paper:#FFFDF6; --paper-edge:#E4D9B8; --pencil:#75604A;
+    --radius:20px;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; overflow-x:hidden; }
+  body{
+    font-family:'Quicksand',sans-serif; color:var(--ink);
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, var(--grass) 62%, var(--grass-dark) 100%);
+    min-height:100vh; padding-bottom:2rem; transition:background 1s ease; -webkit-user-select:none; user-select:none;
+  }
+  body.theme-dragon{ --sky-top:#2E2A4A; --sky-bot:#4A3B6B; --grass:#5B4A8A; --grass-dark:#3E3160; --pop:#FFC93C; --paper:#3B2F5C; --paper-edge:#5B4A8A; --pencil:#E8E4FF; }
+  body.theme-star{ --sky-top:#121F3D; --sky-bot:#243B6B; --grass:#2C4A82; --grass-dark:#1B2F5C; --pop:#FFC93C; --paper:#1B2A52; --paper-edge:#2C4A82; --pencil:#DDEBFF; }
+  body.theme-dragon h1, body.theme-star h1{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .sub, body.theme-star .sub{ color:#C9C2F0; } body.theme-star .sub{ color:#AEC4F0; }
+
+  header{ position:relative; z-index:2; text-align:center; padding:1.1rem 1rem .3rem; }
+  h1{ margin:0; font-family:'Baloo 2',sans-serif; font-size:clamp(1.5rem,5vw,2.1rem); font-weight:800; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .sub{ font-weight:600; color:#3c6b3a; font-size:.85rem; margin-top:.15rem; }
+
+  .modeRow{ position:relative; z-index:2; display:flex; justify-content:center; gap:.4rem; margin-top:.85rem; }
+  .modePill{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.85rem; border:none; cursor:pointer;
+    border-radius:999px; padding:.45rem 1rem; background:rgba(255,255,255,.55); color:var(--ink);
+    box-shadow:0 3px 0 rgba(0,0,0,.12); transition:transform .1s, background .15s, color .15s;
+  }
+  .modePill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .modePill.active{ background:var(--pop); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.12), 0 0 0 3px rgba(255,255,255,.55); }
+
+  .baseSection{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.4rem; margin-top:.85rem; }
+  .baseLabel{ font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .baseRow{ display:flex; gap:.5rem; }
+  .basePill{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; width:2.7rem; height:2.7rem;
+    border:none; border-radius:999px; cursor:pointer; background:rgba(255,255,255,.6); color:var(--ink);
+    box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s;
+  }
+  .basePill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .basePill.active{ background:var(--pop); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px rgba(255,255,255,.55); }
+
+  .factEquation{ position:relative; z-index:2; text-align:center; margin-top:.65rem; }
+  .factEquation .eq{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.5rem; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .factEquation .eqSub{ font-size:.8rem; font-weight:600; color:#3c6b3a; margin-top:.1rem; }
+  body.theme-dragon .factEquation .eq, body.theme-star .factEquation .eq{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .factEquation .eqSub, body.theme-star .factEquation .eqSub{ color:#C9C2F0; }
+  body.theme-star .factEquation .eqSub{ color:#AEC4F0; }
+
+  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.7rem; }
+  .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
+  .resetbtn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; background:rgba(255,255,255,.72); border:none; border-radius:999px; padding:.4rem .9rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); color:var(--ink); }
+  .resetbtn:active{ transform:translateY(1px); }
+
+  /* ---------- draw mode ---------- */
+  .groundsWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.3rem; padding:0 .8rem; }
+  .groundsRow{ display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:.9rem; max-width:52rem; }
+  .groupCard{
+    background:linear-gradient(180deg, var(--paper) 0%, var(--paper) 100%);
+    border:3px dashed var(--paper-edge); border-radius:var(--radius);
+    padding:.7rem .7rem .55rem; width:11.6rem;
+    box-shadow:0 6px 0 rgba(0,0,0,.10);
+    display:flex; flex-direction:column; align-items:center; gap:.5rem;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .groupCard.full{ border-style:solid; border-color:var(--pop); box-shadow:0 6px 0 rgba(0,0,0,.10), 0 0 0 3px rgba(139,107,216,.25); }
+  .groupName{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; color:var(--ink); background:rgba(255,255,255,.6); border-radius:999px; padding:.12rem .6rem; }
+  body.theme-dragon .groupName, body.theme-star .groupName{ color:#fff; background:rgba(255,255,255,.15); }
+  .slotsWrap{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.28rem; }
+  .itemSvg{ width:2.1rem; height:2.1rem; touch-action:manipulation; }
+  .itemSvg.placeholder{ cursor:pointer; opacity:.85; transition:transform .1s, opacity .15s; }
+  .itemSvg.placeholder:active{ transform:scale(.88); }
+  .itemSvg.placeholder:hover{ opacity:1; }
+  .itemSvg.filled{ cursor:pointer; }
+  .itemSvg.filled:active{ transform:scale(.9); }
+  .groupCount{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.85rem; color:var(--pencil); }
+
+  /* ---------- watch mode ---------- */
+  .sceneWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.1rem; padding:0 .6rem; }
+  .sceneCard{
+    width:100%; max-width:46rem; background:rgba(255,255,255,.14); border-radius:var(--radius);
+    box-shadow:0 6px 0 rgba(0,0,0,.10); overflow:hidden;
+  }
+  #scene{ width:100%; height:auto; display:block; }
+  .replayHint{ text-align:center; font-size:.72rem; font-weight:600; color:rgba(255,255,255,.75); margin-top:.4rem; }
+
+  .levelnote{ position:relative; z-index:2; text-align:center; margin-top:1.1rem; padding:0 1.2rem; font-size:.85rem; font-weight:600; color:#3c6b3a; min-height:1.2em; }
+  body.theme-dragon .levelnote, body.theme-star .levelnote{ color:#C9C2F0; }
+
+  .spark{ position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:80; }
+  .toast{
+    position:fixed; left:50%; top:14%; transform:translate(-50%,-14px); z-index:90;
+    background:var(--card); border:3px solid var(--pop); border-radius:18px; padding:.8rem 1.4rem;
+    font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--ink); text-align:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.22); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  .pickers{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:1.4rem; }
+  .pickerRow{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:center; }
+  .pickerLabel{ font-size:.62rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.2); }
+  .pill{ font-family:'Baloo 2',sans-serif; font-weight:700; border:none; cursor:pointer; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s; }
+  .pill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .themePill{ font-size:1.35rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
+  .themePill.active{ background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px var(--pop); }
+  .factPill{ font-size:.85rem; padding:.45rem .75rem; background:rgba(255,255,255,.55); color:var(--ink); }
+  .factPill.active{ background:var(--pop); color:#fff; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="sketchy" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4"/>
+    </filter>
+  </defs>
+</svg>
+
+<header>
+  <h1>✏️ Draw &amp; Multiply</h1>
+  <div class="sub" id="subText">pick how many groups, then pick a times-table fact</div>
+</header>
+
+<div class="modeRow">
+  <button class="modePill active" id="modeDrawBtn">✏️ Draw it</button>
+  <button class="modePill" id="modeWatchBtn">▶️ Watch it</button>
+</div>
+
+<div class="baseSection">
+  <div class="baseLabel" id="baseLabelText">how many baskets?</div>
+  <div class="baseRow" id="baseRow"></div>
+</div>
+
+<div class="factEquation">
+  <div class="eq" id="eqText"></div>
+  <div class="eqSub" id="eqSub"></div>
+</div>
+
+<div class="topbar">
+  <button class="resetbtn" id="resetBtn">↺ Reset</button>
+  <button class="soundbtn" id="soundBtn" title="Toggle sound">🔊</button>
+</div>
+
+<div class="groundsWrap" id="drawStage"><div class="groundsRow" id="groundsRow"></div></div>
+
+<div class="sceneWrap hidden" id="watchStage">
+  <div class="sceneCard">
+    <svg id="scene" viewBox="0 0 900 380" preserveAspectRatio="xMidYMax meet">
+      <g id="treesLayer"></g>
+      <g id="basketsLayer"></g>
+      <g id="countsLayer"></g>
+      <g id="applesLayer"></g>
+    </svg>
+  </div>
+</div>
+<div class="replayHint hidden" id="replayHint">tap ↺ Replay to watch it again</div>
+
+<div class="levelnote" id="levelNote"></div>
+<div class="toast" id="toast"></div>
+
+<div class="pickers">
+  <div class="pickerRow"><span class="pickerLabel">choose your world</span></div>
+  <div class="pickerRow" id="themeRow"></div>
+  <div class="pickerRow"><span class="pickerLabel" id="factRowLabel">times table</span></div>
+  <div class="pickerRow" id="factRow"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const svgNS = 'http://www.w3.org/2000/svg';
+const groundsRow = $('groundsRow'), levelNote = $('levelNote');
+const resetBtn = $('resetBtn'), soundBtn = $('soundBtn');
+const drawStage = $('drawStage'), watchStage = $('watchStage'), replayHint = $('replayHint');
+
+/* ---------- theme art ----------
+   Each theme supplies: the falling item's own outline (reused from the
+   "draw it yourself" mode), plus colors/labels for the background source
+   (a tree, a rocky roost, a drifting cloud) and the foreground container
+   (a woven basket, a nest, a jar) used only in Watch mode. */
+const THEMES = {
+  apple:  {
+    label:'Apples', sourceLabel:'Tree', containerLabel:'Basket',
+    itemPath:'M22 14 C10 14 8 26 12 33 C15 38 20 40 22 40 C24 40 29 38 32 33 C36 26 34 14 22 14 Z M22 14 C22 10 20 8 18 7 M22 10 C26 8 29 10 28 13 C25 14 22 13 22 10 Z',
+    itemFill:'#E8583F', itemStroke:'#7A3020',
+    hasTrunk:true, trunkColor:'#8a5a34', trunkStroke:'#5c3a20',
+    foliage:'#6FA84C', foliageStroke:'#3c6b3a',
+    basket:'#C68B4A', basketStroke:'#7A4A24', weave:'#8B5A2E'
+  },
+  dragon: {
+    label:'Dragon eggs', sourceLabel:'Roost', containerLabel:'Nest',
+    itemPath:'M22 6 C30 6 36 20 36 30 C36 38 30 42 22 42 C14 42 8 38 8 30 C8 20 14 6 22 6 Z M16 22 L20 26 L17 30 M27 18 L30 21',
+    itemFill:'#FFC93C', itemStroke:'#8a6a12',
+    hasTrunk:true, trunkColor:'#5B4A8A', trunkStroke:'#3E3160',
+    foliage:'#8B6BD8', foliageStroke:'#5B4A8A',
+    basket:'#6B5497', basketStroke:'#4A3873', weave:'#7C63AE'
+  },
+  star:   {
+    label:'Stars', sourceLabel:'Cloud', containerLabel:'Jar',
+    itemPath:'M22 4 L27 17 L41 17 L30 26 L34 40 L22 31 L10 40 L14 26 L3 17 L17 17 Z',
+    itemFill:'#FFD54A', itemStroke:'#8a6a12',
+    hasTrunk:false, trunkColor:'', trunkStroke:'',
+    foliage:'#3E5AA8', foliageStroke:'#243B6B',
+    basket:'#233A6E', basketStroke:'#182a52', weave:'#3B5590'
+  },
+};
+let theme = 'apple';
+let mode = 'draw'; // 'draw' | 'watch'
+
+/* ---------- shared model ----------
+   base = number of groups (1..5), n = target items per group (1..10),
+   chosen from the base's times table. Both modes build toward the same
+   fact: base groups of n, base × n total. */
+let base = 3;
+let n = 3;
+
+let soundOn = true, actx;
+
+function total(){ return base * n; }
+
+/* ---------- tiny synth ---------- */
+function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
+function tone(freq,dur,type,vol,delay){
+  if(!soundOn) return; ensureAudio();
+  const t0=actx.currentTime+(delay||0), osc=actx.createOscillator(), gain=actx.createGain();
+  osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0,t0); gain.gain.linearRampToValueAtTime(vol||.14,t0+.01);
+  gain.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  osc.connect(gain).connect(actx.destination); osc.start(t0); osc.stop(t0+dur+.02);
+}
+const sfxDraw = k => tone(340+k*24,.09,'triangle',.1);
+const sfxErase = () => tone(220,.11,'sawtooth',.06);
+const sfxThud = () => tone(180,.1,'sine',.09);
+const sfxChime = () => [523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.09));
+soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
+
+/* ================= shared equation / celebration ================= */
+let celebrated = false;
+function updateEquation(drawnCount){
+  $('eqText').textContent = `${base} × ${n} = ${total()}`;
+  $('eqSub').textContent = drawnCount === total()
+    ? `all ${total()} in place — ${base} group${base===1?'':'s'} of ${n}`
+    : `${drawnCount} of ${total()} in place so far`;
+}
+function updateNote(drawnCount, verb){
+  const remaining = total() - drawnCount;
+  if (remaining > 0){
+    levelNote.textContent = mode === 'watch'
+      ? `${remaining} more on the way — every ${THEMES[theme].containerLabel.toLowerCase()} gets ${n}`
+      : `${remaining} more to draw — every group needs ${n} to match the fact`;
+  } else {
+    levelNote.textContent = `every ${THEMES[theme].containerLabel.toLowerCase()} holds ${n} — that's ${base} × ${n} = ${total()}!`;
+  }
+}
+function checkComplete(drawnCount){
+  if (drawnCount === total() && !celebrated){
+    celebrated = true;
+    celebrate();
+  }
+}
+function celebrate(){
+  sfxChime();
+  showToast(`✨ ${base} × ${n} = ${total()}!`);
+  fireworks(mode === 'watch' ? $('scene') : groundsRow);
+}
+function showToast(text){
+  const t = $('toast'); t.textContent = text; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function burst(cx, cy){
+  const cols_ = ['#FFC93C','#E85B4A','#4C8C3D','#8B6BD8','#4AC7E0','#fff'];
+  for (let i=0;i<26;i++){
+    const p = document.createElement('div');
+    p.className = 'spark';
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    p.style.background = cols_[(Math.random()*cols_.length)|0];
+    document.body.appendChild(p);
+    const a = Math.random()*Math.PI*2, d = 60+Math.random()*170;
+    const dx = Math.cos(a)*d, dy = Math.sin(a)*d - 60;
+    const dur = 750+Math.random()*450;
+    p.animate([
+      { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+      { transform:`translate(${dx}px,${dy+140}px) scale(.3)`, opacity:0 }
+    ], { duration:dur, easing:'cubic-bezier(.15,.7,.3,1)' });
+    setTimeout(()=>p.remove(), dur+30);
+  }
+}
+function fireworks(refEl){
+  const rect = refEl.getBoundingClientRect();
+  const spots = [0.2, 0.5, 0.8];
+  spots.forEach((frac, i) => {
+    setTimeout(() => burst(rect.left + rect.width*frac, rect.top + 20), i*220);
+  });
+}
+
+/* ================= DRAW MODE (tap a dashed outline to ink it, tap it again to erase) ================= */
+let counts = [];
+let lastAdded = null;
+
+function drawResetAll(){
+  counts = Array(base).fill(0);
+  celebrated = false;
+  lastAdded = null;
+  drawRender();
+}
+function itemSvgMarkup(t){
+  return `<path d="${t.itemPath}" fill="${t.itemFill}" stroke="${t.itemStroke}" stroke-width="2.4"
+    stroke-linejoin="round" stroke-linecap="round" filter="url(#sketchy)"/>`;
+}
+function placeholderSvgMarkup(t){
+  return `<path d="${t.itemPath}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.1"
+    stroke-dasharray="3 4" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+function drawRender(){
+  const t = THEMES[theme];
+  groundsRow.innerHTML = '';
+  counts.forEach((count, gi) => {
+    const card = document.createElement('div');
+    card.className = 'groupCard' + (count === n ? ' full' : '');
+    const name = document.createElement('div');
+    name.className = 'groupName';
+    name.textContent = `${t.containerLabel} ${gi+1}`;
+    const slots = document.createElement('div');
+    slots.className = 'slotsWrap';
+    for (let s=0; s<n; s++){
+      const svg = document.createElementNS(svgNS,'svg');
+      svg.setAttribute('viewBox','0 0 44 44');
+      if (s < count){
+        svg.classList.add('itemSvg','filled');
+        svg.innerHTML = itemSvgMarkup(t);
+        svg.onclick = () => eraseItem(gi, svg);
+        slots.appendChild(svg);
+        if (lastAdded && lastAdded.group === gi && lastAdded.slot === s){
+          const p = svg.querySelector('path');
+          requestAnimationFrame(() => drawIn(p));
+        }
+      } else {
+        svg.classList.add('itemSvg','placeholder');
+        svg.innerHTML = placeholderSvgMarkup(t);
+        svg.onclick = () => addItem(gi);
+        slots.appendChild(svg);
+      }
+    }
+    const countLabel = document.createElement('div');
+    countLabel.className = 'groupCount';
+    countLabel.textContent = `${count} / ${n}`;
+    card.appendChild(name); card.appendChild(slots); card.appendChild(countLabel);
+    groundsRow.appendChild(card);
+  });
+  lastAdded = null;
+  updateEquation(counts.reduce((a,b)=>a+b,0));
+  updateNote();
+}
+function drawIn(pathEl){
+  if (!pathEl) return;
+  const len = pathEl.getTotalLength();
+  pathEl.style.fillOpacity = 0;
+  pathEl.style.strokeDasharray = len;
+  pathEl.style.strokeDashoffset = len;
+  pathEl.getBoundingClientRect();
+  pathEl.style.transition = 'stroke-dashoffset .5s ease, fill-opacity .3s ease .42s';
+  requestAnimationFrame(() => { pathEl.style.strokeDashoffset = 0; pathEl.style.fillOpacity = 1; });
+}
+function addItem(gi){
+  if (counts[gi] >= n) return;
+  counts[gi]++;
+  lastAdded = { group:gi, slot: counts[gi]-1 };
+  sfxDraw(counts[gi]);
+  drawRender();
+  checkComplete(counts.reduce((a,b)=>a+b,0));
+}
+function eraseItem(gi, svgEl){
+  const p = svgEl.querySelector('path');
+  sfxErase();
+  const len = p.getTotalLength ? p.getTotalLength() : 100;
+  p.style.strokeDasharray = len;
+  p.style.transition = 'fill-opacity .15s ease, stroke-dashoffset .35s ease .1s, opacity .45s ease .25s';
+  p.style.fillOpacity = 0; p.style.strokeDashoffset = len; p.style.opacity = 0;
+  celebrated = false;
+  setTimeout(() => { counts[gi]--; drawRender(); }, 420);
+}
+
+/* ================= WATCH MODE ================= */
+/* Three staged reveals, each slower than the last so a child can track it:
+   1) the trees/roosts/clouds sketch themselves in, left to right
+   2) the baskets/nests/jars sketch themselves in below them
+   3) items fall one at a time from each source into its container, in
+      round-robin order, so every container visibly grows at the same pace */
+const TREE_STAGGER = 420, TREE_DUR = 650;
+const BASKET_STAGGER = 380, BASKET_DUR = 600;
+const GAP_AFTER_TREES = 350, GAP_AFTER_BASKETS = 550;
+const APPLE_STAGGER = 620, APPLE_FLIGHT = 950;
+
+let watchCounts = [];
+let watchAnims = [];   // every Animation object created this playthrough, so replay can cancel cleanly
+let watchCenters = [];
+
+function svgEl(tag, attrs){
+  const el = document.createElementNS(svgNS, tag);
+  Object.entries(attrs||{}).forEach(([k,v]) => el.setAttribute(k, v));
+  return el;
+}
+function revealPath(el, delay, dur){
+  const len = el.getTotalLength();
+  el.style.strokeDasharray = len;
+  const anim = el.animate([
+    { strokeDashoffset: len, fillOpacity: 0, offset: 0 },
+    { strokeDashoffset: 0,   fillOpacity: 0, offset: 0.65 },
+    { strokeDashoffset: 0,   fillOpacity: 1, offset: 1 }
+  ], { duration: dur, delay, easing:'ease', fill:'both' });
+  watchAnims.push(anim);
+  return anim;
+}
+function revealFade(el, delay, dur){
+  const anim = el.animate([{ opacity:0 },{ opacity:1 }], { duration:dur, delay, easing:'ease', fill:'both' });
+  watchAnims.push(anim);
+  return anim;
+}
+
+function sourceGroup(t, cx){
+  const g = svgEl('g', {});
+  const canopyCy = t.hasTrunk ? 108 : 86;
+  if (t.hasTrunk){
+    const trunk = svgEl('path', {
+      d:`M${cx-7} 300 L${cx-5} 150 L${cx+5} 150 L${cx+7} 300 Z`,
+      fill:t.trunkColor, stroke:t.trunkStroke, 'stroke-width':2, filter:'url(#sketchy)'
+    });
+    g.appendChild(trunk);
+  }
+  const lobes = [[-24,10],[0,-16],[24,10]];
+  const r = 42;
+  lobes.forEach(([dx,dy]) => {
+    const lx = cx+dx, ly = canopyCy+dy;
+    const lobe = svgEl('path', {
+      d:`M${lx-r} ${ly} a${r} ${r} 0 1 0 ${2*r} 0 a${r} ${r} 0 1 0 ${-2*r} 0`,
+      fill:t.foliage, stroke:t.foliageStroke, 'stroke-width':2.2, filter:'url(#sketchy)'
+    });
+    g.appendChild(lobe);
+  });
+  return g;
+}
+function containerGroup(t, cx){
+  const g = svgEl('g', {});
+  const wTop=94, wBot=64, topY=248, botY=322;
+  const body = svgEl('path', {
+    d:`M${cx-wTop/2} ${topY} L${cx+wTop/2} ${topY} L${cx+wBot/2} ${botY} L${cx-wBot/2} ${botY} Z`,
+    fill:t.basket, stroke:t.basketStroke, 'stroke-width':2.4, filter:'url(#sketchy)'
+  });
+  const rim = svgEl('ellipse', { cx, cy:topY, rx:wTop/2, ry:9, fill:'none', stroke:t.basketStroke, 'stroke-width':2.4 });
+  const weave = svgEl('g', { opacity:0, class:'weaveLines' });
+  for (let row=0; row<3; row++){
+    const y = topY + 22 + row*22;
+    const frac = (y-topY)/(botY-topY);
+    const w = wTop + (wBot-wTop)*frac;
+    weave.appendChild(svgEl('line', { x1:cx-w/2, y1:y, x2:cx+w/2, y2:y, stroke:t.weave, 'stroke-width':1.6, 'stroke-linecap':'round' }));
+  }
+  g.appendChild(body); g.appendChild(rim); g.appendChild(weave);
+  return { g, body, rim, weave };
+}
+
+function buildWatchScene(){
+  const t = THEMES[theme];
+  const treesLayer = $('treesLayer'), basketsLayer = $('basketsLayer'), countsLayer = $('countsLayer'), applesLayer = $('applesLayer');
+  treesLayer.innerHTML=''; basketsLayer.innerHTML=''; countsLayer.innerHTML=''; applesLayer.innerHTML='';
+  watchAnims = [];
+  watchCounts = Array(base).fill(0);
+  celebrated = false;
+
+  const W = 900;
+  watchCenters = [];
+  for (let i=0;i<base;i++) watchCenters.push((i+0.5)*(W/base));
+
+  let delay = 0;
+  watchCenters.forEach(cx => {
+    const g = sourceGroup(t, cx);
+    treesLayer.appendChild(g);
+    Array.from(g.children).forEach((child, ci) => revealPath(child, delay + ci*90, TREE_DUR));
+    delay += TREE_STAGGER;
+  });
+  delay += GAP_AFTER_TREES;
+
+  const containers = [];
+  watchCenters.forEach(cx => {
+    const c = containerGroup(t, cx);
+    basketsLayer.appendChild(c.g);
+    revealPath(c.body, delay, BASKET_DUR);
+    revealFade(c.rim, delay + 250, 300);
+    revealFade(c.weave, delay + 420, 350);
+    containers.push(c);
+    delay += BASKET_STAGGER;
+  });
+  delay += GAP_AFTER_BASKETS;
+
+  watchCenters.forEach((cx, gi) => {
+    const label = svgEl('text', { x:cx, y:344, 'text-anchor':'middle', class:'countLabel' });
+    label.setAttribute('font-family','Baloo 2, sans-serif');
+    label.setAttribute('font-weight','800');
+    label.setAttribute('font-size','15');
+    label.setAttribute('fill', 'rgba(255,255,255,.92)');
+    label.textContent = `0 / ${n}`;
+    countsLayer.appendChild(label);
+  });
+
+  return { startDelay: delay };
+}
+
+function appleRestSpot(cx, idx){
+  const wBot = 64, botY = 322, topY = 248;
+  const row = Math.floor(idx/3), col = idx%3;
+  const usableTop = Math.max(topY+20, botY-16-row*15);
+  return { x: cx + (col-1)*20, y: usableTop };
+}
+
+function flightKeyframes(x0,y0,x1,y1){
+  const sway = (Math.random()<0.5? -1:1) * (14 + Math.random()*10);
+  const steps = 6, kfs = [];
+  for (let i=0;i<=steps;i++){
+    const f = i/steps;
+    const x = x0 + (x1-x0)*f + Math.sin(f*Math.PI)*sway;
+    const y = y0 + (y1-y0)*f - Math.sin(f*Math.PI)*18;
+    const rot = f<1 ? (sway>0?1:-1)*f*140 : 0;
+    kfs.push({ transform:`translate(${x-11}px,${y-11}px) scale(0.55) rotate(${rot}deg)`, offset:f });
+  }
+  return kfs;
+}
+
+function playWatch(){
+  watchAnims.forEach(a => a.cancel());
+  const { startDelay } = buildWatchScene();
+  const t = THEMES[theme];
+  updateEquation(0);
+  updateNote(0);
+  levelNote.textContent = `watch the ${t.sourceLabel.toLowerCase()}s and ${t.containerLabel.toLowerCase()}s appear…`;
+  replayHint.classList.add('hidden');
+
+  const applesLayer = $('applesLayer');
+  const seq = [];
+  for (let r=0;r<n;r++){
+    for (let gi=0; gi<base; gi++) seq.push(gi);
+  }
+
+  seq.forEach((gi, k) => {
+    const cx = watchCenters[gi];
+    const x0 = cx + (Math.random()*24-12), y0 = 96;
+    const idx = k===0 ? 0 : seq.slice(0,k).filter(v=>v===gi).length; // resting slot index within this basket
+    const spot = appleRestSpot(cx, idx);
+    const appleG = svgEl('g', { transform:`translate(${x0-11}px,${y0-11}px) scale(0.55)` });
+    appleG.innerHTML = `<path d="${t.itemPath}" fill="${t.itemFill}" stroke="${t.itemStroke}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" filter="url(#sketchy)"/>`;
+    appleG.style.opacity = 0;
+    applesLayer.appendChild(appleG);
+
+    const kfs = flightKeyframes(x0,y0,spot.x,spot.y);
+    kfs[0].opacity = 0; // stays invisible until launch
+    for (let i=1;i<kfs.length;i++) kfs[i].opacity = 1;
+
+    const launchDelay = startDelay + k*APPLE_STAGGER;
+    const anim = appleG.animate(kfs, { duration: APPLE_FLIGHT, delay: launchDelay, easing:'cubic-bezier(.45,.1,.55,.95)', fill:'both' });
+    watchAnims.push(anim);
+
+    anim.onfinish = () => {
+      // small settle squash
+      const squash = appleG.animate([
+        { transform: appleG.style.transform + ' scale(1)' },
+        { transform: `translate(${spot.x-11}px,${spot.y-11}px) scale(0.62,0.46)` },
+        { transform: `translate(${spot.x-11}px,${spot.y-11}px) scale(0.55)` }
+      ], { duration:180, easing:'ease-out' });
+      watchAnims.push(squash);
+      sfxThud();
+      watchCounts[gi]++;
+      const dt = watchCounts.reduce((a,b)=>a+b,0);
+      $('countsLayer').children[gi].textContent = `${watchCounts[gi]} / ${n}`;
+      updateEquation(dt);
+      updateNote(dt);
+      if (dt === total()){
+        setTimeout(() => { checkComplete(dt); replayHint.classList.remove('hidden'); }, 200);
+      }
+    };
+  });
+}
+
+/* ================= mode / picker wiring ================= */
+function enterMode(newMode){
+  if (newMode === mode) return;
+  mode = newMode;
+  $('modeDrawBtn').classList.toggle('active', mode==='draw');
+  $('modeWatchBtn').classList.toggle('active', mode==='watch');
+  drawStage.classList.toggle('hidden', mode!=='draw');
+  watchStage.classList.toggle('hidden', mode!=='watch');
+  replayHint.classList.toggle('hidden', mode!=='watch');
+  $('subText').textContent = mode==='draw'
+    ? 'pick how many groups, then pick a times-table fact — tap to draw items in, tap again to erase'
+    : 'pick how many groups, then pick a times-table fact — sit back and watch the fact get built';
+  $('baseLabelText').textContent = mode==='draw' ? 'how many groups?' : `how many ${THEMES[theme].containerLabel.toLowerCase()}s?`;
+  resetBtn.textContent = mode==='draw' ? '↺ Reset' : '↺ Replay';
+  runCurrentMode();
+}
+function runCurrentMode(){
+  if (mode === 'draw') drawResetAll();
+  else playWatch();
+}
+$('modeDrawBtn').onclick = () => enterMode('draw');
+$('modeWatchBtn').onclick = () => enterMode('watch');
+resetBtn.onclick = () => runCurrentMode();
+
+function buildPickers(){
+  const baseRow = $('baseRow');
+  baseRow.innerHTML = '';
+  for (let b=1;b<=5;b++){
+    const btn = document.createElement('button');
+    btn.className = 'basePill' + (b === base ? ' active' : '');
+    btn.textContent = b;
+    btn.onclick = () => selectBase(b);
+    baseRow.appendChild(btn);
+  }
+  $('baseLabelText').textContent = mode==='draw' ? 'how many groups?' : `how many ${THEMES[theme].containerLabel.toLowerCase()}s?`;
+
+  const themeRow = $('themeRow');
+  themeRow.innerHTML = '';
+  const emojis = { apple:'🍎', dragon:'🥚', star:'⭐' };
+  Object.entries(THEMES).forEach(([key, t]) => {
+    const b = document.createElement('button');
+    b.className = 'pill themePill' + (key === theme ? ' active' : '');
+    b.textContent = emojis[key]; b.title = t.label; b.setAttribute('aria-label', t.label);
+    b.onclick = () => selectTheme(key);
+    themeRow.appendChild(b);
+  });
+
+  $('factRowLabel').textContent = `the ${base}× table`;
+  const factRow = $('factRow');
+  factRow.innerHTML = '';
+  for (let i=1;i<=10;i++){
+    const b = document.createElement('button');
+    b.className = 'pill factPill' + (i === n ? ' active' : '');
+    b.textContent = `${base}×${i}`;
+    b.onclick = () => selectFact(i);
+    factRow.appendChild(b);
+  }
+}
+function selectTheme(key){
+  if (key === theme) return;
+  theme = key;
+  document.body.className = theme === 'apple' ? '' : 'theme-' + theme;
+  buildPickers();
+  runCurrentMode();
+}
+function selectBase(b){
+  if (b === base) return;
+  base = b;
+  buildPickers();
+  runCurrentMode();
+}
+function selectFact(i){
+  if (i === n) return;
+  n = i;
+  buildPickers();
+  runCurrentMode();
+}
+
+buildPickers();
+runCurrentMode();
+</script>
+</body>
+</html>
