@@ -13,8 +13,8 @@
     --paper:#FFFCF3; --paper-edge:#E8DEC4;
     --ink:#33422E; --ink-soft:#5B6B54;
     --yellow:#F2C94C; --coral:#E85B4A;
-    --pin1:#D64550; --pin2:#3E7CB1; --pin3:#E8A93C; --pin4:#5B8C4A; --pin5:#8B6BD8;
-    --radius:18px;
+    --pin1:#D64550; --pin2:#3E7CB1; --pin3:#E8A93C; --pin4:#5B8C4A; --pin5:#8B6BD8; --pin6:#3E7CB1;
+    --radius:16px;
   }
   *,*::before,*::after{ box-sizing:border-box; }
   html,body{ margin:0; }
@@ -31,78 +31,76 @@
       radial-gradient(circle at 22% 46%, rgba(0,0,0,.04) 0 3px, transparent 4px),
       linear-gradient(160deg, var(--cork) 0%, var(--cork-dark) 100%);
     background-attachment:fixed;
-    min-height:100vh; padding-bottom:3rem;
+    min-height:100vh; padding-bottom:2rem;
   }
 
   svg.defs{ position:absolute; width:0; height:0; }
 
-  /* ---------- hero: hanging chalkboard sign ---------- */
-  .signWrap{ display:flex; justify-content:center; padding-top:2.4rem; }
+  /* ---------- hero: hanging chalkboard sign (reduced) ---------- */
+  .signWrap{ display:flex; justify-content:center; padding-top:1.4rem; }
   .sign{
-    position:relative; width:min(94vw, 640px);
+    position:relative; width:min(92vw, 480px);
     background:linear-gradient(180deg, var(--board) 0%, var(--board-dark) 100%);
-    border-radius:22px; padding:2rem 1.6rem 1.6rem;
-    box-shadow:0 14px 0 rgba(0,0,0,.18), 0 22px 34px rgba(0,0,0,.28);
+    border-radius:18px; padding:1.1rem 1.2rem .9rem;
+    box-shadow:0 8px 0 rgba(0,0,0,.18), 0 14px 22px rgba(0,0,0,.26);
     text-align:center;
   }
   .sign::before, .sign::after{
-    content:''; position:absolute; top:-34px; width:10px; height:40px;
+    content:''; position:absolute; top:-22px; width:8px; height:26px;
     background:linear-gradient(180deg,#caa572,#8c6238); border-radius:3px;
   }
   .sign::before{ left:16%; transform:rotate(-6deg); }
   .sign::after{ right:16%; transform:rotate(6deg); }
-  .eyebrow{
-    font-family:'Quicksand',sans-serif; font-weight:700; font-size:.72rem; letter-spacing:.16em;
-    text-transform:uppercase; color:var(--yellow); opacity:.9; margin-bottom:.5rem;
-  }
   h1{
     margin:0; font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--chalk);
-    font-size:clamp(1.9rem,6.5vw,3rem); line-height:1.05;
+    font-size:clamp(1.4rem,5.5vw,2.1rem); line-height:1.1;
     text-shadow:0 0 1px rgba(255,255,255,.25);
   }
-  .doodle{ width:min(70%, 260px); height:auto; margin:.75rem auto .3rem; display:block; }
+  .doodle{ width:min(56%, 180px); height:auto; margin:.4rem auto .1rem; display:block; }
   .signature{
-    font-family:'Caveat',cursive; font-weight:700; font-size:1.6rem; color:var(--chalk);
-    margin-top:.6rem;
+    font-family:'Caveat',cursive; font-weight:700; font-size:1.15rem; color:var(--chalk);
+    margin-top:.3rem;
   }
-  .stampRow{ display:flex; justify-content:center; margin-top:.5rem; }
-  .stamp{
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.72rem; letter-spacing:.06em;
-    color:var(--coral); border:2.5px solid var(--coral); border-radius:8px; padding:.18rem .6rem;
-    transform:rotate(-4deg); text-transform:uppercase; opacity:.92;
-  }
+
   .intro{
-    max-width:36rem; margin:1.3rem auto 0; text-align:center; padding:0 1.4rem;
-    font-weight:600; font-size:.95rem; color:#3f2f1c; line-height:1.5;
+    max-width:32rem; margin:.9rem auto 0; text-align:center; padding:0 1.2rem;
+    font-weight:700; font-size:.9rem; color:#3f2f1c;
   }
-  .intro b{ color:var(--board); }
 
   /* ---------- cork board of pinned cards ---------- */
   .board{
-    max-width:74rem; margin:2.3rem auto 0; padding:0 1.4rem;
-    display:grid; gap:2.1rem 1.6rem;
-    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+    max-width:60rem; margin:1.5rem auto 0; padding:0 1.1rem;
+    display:grid; gap:1.3rem .9rem;
+    grid-template-columns:repeat(2, 1fr);
   }
+  @media (min-width:560px){
+    .board{ grid-template-columns:repeat(3, 1fr); }
+  }
+  @media (min-width:900px){
+    .board{ grid-template-columns:repeat(6, 1fr); gap:1rem .9rem; }
+  }
+
   .card{
     position:relative; background:var(--paper); border:1px solid var(--paper-edge);
-    border-radius:var(--radius); padding:1.5rem 1.1rem 1.2rem;
-    box-shadow:0 10px 18px rgba(60,40,15,.22), 0 2px 0 rgba(60,40,15,.08);
+    border-radius:var(--radius); padding:1.1rem .7rem .9rem;
+    box-shadow:0 7px 12px rgba(60,40,15,.22), 0 2px 0 rgba(60,40,15,.08);
     text-align:center; transition:transform .18s ease, box-shadow .18s ease;
+    display:flex; flex-direction:column; align-items:center;
   }
   .card:hover, .card:focus-within{
-    transform:rotate(0deg) translateY(-4px) scale(1.02);
-    box-shadow:0 16px 26px rgba(60,40,15,.28), 0 2px 0 rgba(60,40,15,.08);
+    transform:rotate(0deg) translateY(-3px) scale(1.02);
+    box-shadow:0 12px 18px rgba(60,40,15,.28), 0 2px 0 rgba(60,40,15,.08);
   }
   .card:nth-child(1){ transform:rotate(-2.4deg); }
   .card:nth-child(2){ transform:rotate(1.8deg); }
   .card:nth-child(3){ transform:rotate(-1.2deg); }
   .card:nth-child(4){ transform:rotate(2.2deg); }
   .card:nth-child(5){ transform:rotate(-1.8deg); }
-  .card:nth-child(6){ transform:rotate(2.2deg); }
+  .card:nth-child(6){ transform:rotate(1.6deg); }
 
   .pin{
-    position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-    width:20px; height:20px; border-radius:50%;
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%;
     box-shadow:0 3px 5px rgba(0,0,0,.35), inset 0 -3px 4px rgba(0,0,0,.25), inset 0 2px 3px rgba(255,255,255,.5);
   }
   .card:nth-child(1) .pin{ background:var(--pin1); }
@@ -112,27 +110,23 @@
   .card:nth-child(5) .pin{ background:var(--pin5); }
   .card:nth-child(6) .pin{ background:var(--pin6); }
 
-  .icon{ width:56px; height:56px; margin:.3rem auto .6rem; display:block; }
-  .cardTitle{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.06rem; color:var(--board); }
-  .cardTag{
-    display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--ink-soft); background:rgba(46,77,59,.08); border-radius:999px; padding:.16rem .55rem; margin-top:.3rem;
-  }
-  .cardDesc{ font-size:.83rem; font-weight:600; color:var(--ink-soft); line-height:1.45; margin-top:.6rem; min-height:3.2em; }
+  .icon{ width:40px; height:40px; margin:.2rem auto .4rem; display:block; }
+  .cardTitle{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.92rem; color:var(--board); line-height:1.15; }
+  .cardFun{ font-size:.78rem; font-weight:700; color:var(--ink-soft); margin-top:.3rem; }
 
   .playBtn{
-    display:inline-flex; align-items:center; gap:.35rem; margin-top:.9rem;
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.86rem; text-decoration:none;
-    color:#fff; background:var(--board); border-radius:999px; padding:.5rem 1.1rem;
+    display:inline-flex; align-items:center; gap:.3rem; margin-top:.7rem;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.78rem; text-decoration:none;
+    color:#fff; background:var(--board); border-radius:999px; padding:.4rem .9rem;
     box-shadow:0 3px 0 var(--board-dark); transition:transform .1s, box-shadow .1s;
   }
   .playBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--board-dark); }
   .playBtn:hover{ background:var(--coral); box-shadow:0 3px 0 #a53c2f; }
-  .playBtn svg{ width:13px; height:13px; }
+  .playBtn svg{ width:11px; height:11px; }
 
   footer{
-    max-width:40rem; margin:2.6rem auto 0; padding:0 1.4rem; text-align:center;
-    font-size:.78rem; font-weight:600; color:#3f2f1c; opacity:.85; line-height:1.5;
+    max-width:36rem; margin:1.8rem auto 0; padding:0 1.2rem; text-align:center;
+    font-size:.72rem; font-weight:600; color:#3f2f1c; opacity:.85; line-height:1.4;
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -151,7 +145,6 @@
 
 <div class="signWrap">
   <div class="sign">
-    <div class="eyebrow">Matemática · 1.º Ciclo</div>
     <h1>Tabuada para Crianças</h1>
 
     <svg class="doodle" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
@@ -164,14 +157,10 @@
     </svg>
 
     <div class="signature">Professora Catarina Ferreiras</div>
-    <div class="stampRow"><span class="stamp">1.º Ciclo</span></div>
   </div>
 </div>
 
-<p class="intro">
-  Cinco jogos, uma só ideia: <b>multiplicar é juntar grupos iguais</b> — em fileiras, em cestos,
-  em pratos de uma balança ou repartidos por igual. Escolhe um cartão do placard e começa a explorar a tabuada.
-</p>
+<p class="intro">Escolhe um jogo e diverte-te a aprender! 🎉</p>
 
 <div class="board">
 
@@ -186,9 +175,7 @@
       </g>
     </svg>
     <div class="cardTitle">Horta às Fileiras</div>
-    <div class="cardTag">Filas × Colunas</div>
-    <p class="cardDesc">Planta os canteiros em filas iguais e descobre como a multiplicação organiza grupos em linhas e colunas.</p>
-    <!-- liga este cartão a array-garden.html -->
+    <div class="cardFun">🌱 Planta e conta!</div>
     <a class="playBtn" href="array-garden.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
   </div>
 
@@ -205,9 +192,7 @@
       </g>
     </svg>
     <div class="cardTitle">Laboratório do Equilíbrio</div>
-    <div class="cardTag">Repartição igual</div>
-    <p class="cardDesc">Arrasta objetos até cada prato ficar igual — equilibrar é repartir a mesma quantidade por todos.</p>
-    <!-- liga este cartão a balance-lab.html -->
+    <div class="cardFun">⚖️ Equilibra a balança!</div>
     <a class="playBtn" href="balance-lab.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
   </div>
 
@@ -223,9 +208,7 @@
       </g>
     </svg>
     <div class="cardTitle">Cestos aos Molhos</div>
-    <div class="cardTag">Grupo a grupo</div>
-    <p class="cardDesc">Enche cada cesto com a mesma quantidade e vê o total crescer, grupo a grupo, até formar a tabuada.</p>
-    <!-- liga este cartão a basket-builder.html -->
+    <div class="cardFun">🧺 Enche os cestos!</div>
     <a class="playBtn" href="basket-builder.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
   </div>
 
@@ -242,9 +225,7 @@
       </g>
     </svg>
     <div class="cardTitle">Desenha e Multiplica</div>
-    <div class="cardTag">Desenhar ou observar</div>
-    <p class="cardDesc">Desenha os elementos tu mesmo ou observa-os a aparecer sozinhos — a mesma tabuada, dois modos de aprender.</p>
-    <!-- liga este cartão a draw-and-watch.html -->
+    <div class="cardFun">✏️ Desenha e conta!</div>
     <a class="playBtn" href="draw-and-watch.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
   </div>
 
@@ -266,36 +247,32 @@
       </g>
      </svg>
     <div class="cardTitle">Reparte por Igual</div>
-    <div class="cardTag">Divisão ↔ Tabuada</div>
-    <p class="cardDesc">Divide uma quantidade em partes exatamente iguais e descobre a tabuada ao contrário.</p>
-    <!-- liga este cartão a fair-share.html -->
+    <div class="cardFun">🍪 Reparte por igual!</div>
     <a class="playBtn" href="fair-share.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
-    
-        <!-- 6 · Esacada -->
+  </div>
+
+  <!-- 6 · Escada (step-ladder) -->
   <div class="card">
     <div class="pin"></div>
     <svg class="icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
       <g fill="none" stroke="#33422E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#sketchy)">
-        <line x1="30" y1="10" x2="30" y2="46"/>
-        <line x1="12" y1="20" x2="48" y2="20"/>
-        <path d="M12 20 L6 33 Q12 38 18 33 Z"/>
-        <path d="M48 20 L42 33 Q48 38 54 33 Z"/>
-        <line x1="18" y1="46" x2="42" y2="46"/>
+        <line x1="16" y1="52" x2="24" y2="8"/>
+        <line x1="44" y1="52" x2="36" y2="8"/>
+        <line x1="17.7" y1="43" x2="41.5" y2="43"/>
+        <line x1="19.3" y1="34" x2="39.9" y2="34"/>
+        <line x1="21" y1="25" x2="38.3" y2="25"/>
+        <line x1="22.6" y1="16" x2="36.7" y2="16"/>
       </g>
     </svg>
-    <div class="cardTitle">Laboratório do Equilíbrio</div>
-    <div class="cardTag">Repartição igual</div>
-    <p class="cardDesc">Arrasta objetos até cada prato ficar igual — equilibrar é repartir a mesma quantidade por todos.</p>
-    <!-- liga este cartão a balance-lab.html -->
-    <a class="playBtn" href="balance-lab.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
+    <div class="cardTitle">Escada da Tabuada</div>
+    <div class="cardFun">🪜 Sobe degrau a degrau!</div>
+    <a class="playBtn" href="index.html">Jogar <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L10 6 L2 11 Z"/></svg></a>
   </div>
-      
-    
 
 </div>
 
 <footer>
-  Placard da turma · atualizado pela Professora Catarina Ferreiras · 1.º Ciclo do Ensino Básico
+  Placard da turma · Professora Catarina Ferreiras · 1.º Ciclo
 </footer>
 
 </body>
