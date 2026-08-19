@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Step Ladder — watch the times table grow, one step at a time</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#BFE9F7; --sky-bot:#EAF7E0; --grass:#8FC26A; --grass-dark:#6FA84C;
+    --ink:#33422E; --ink-soft:#5B6B54; --card:#FFFDF6;
+    --pop:#8B6BD8; --riser:#E8935A; --riser-dark:#C6713C;
+    --riser-ghost:#fff; --radius:20px;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; overflow-x:hidden; }
+  body{
+    font-family:'Quicksand',sans-serif; color:var(--ink);
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, var(--grass) 62%, var(--grass-dark) 100%);
+    min-height:100vh; padding-bottom:2rem; transition:background 1s ease; -webkit-user-select:none; user-select:none;
+  }
+  body.theme-dragon{ --sky-top:#2E2A4A; --sky-bot:#4A3B6B; --grass:#5B4A8A; --grass-dark:#3E3160; --pop:#FFC93C; --riser:#6B5497; --riser-dark:#4A3873; }
+  body.theme-star{ --sky-top:#121F3D; --sky-bot:#243B6B; --grass:#2C4A82; --grass-dark:#1B2F5C; --pop:#FFC93C; --riser:#233A6E; --riser-dark:#182a52; }
+  body.theme-dragon h1, body.theme-star h1{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .sub, body.theme-star .sub{ color:#C9C2F0; } body.theme-star .sub{ color:#AEC4F0; }
+
+  header{ position:relative; z-index:2; text-align:center; padding:1.1rem 1rem .3rem; }
+  h1{ margin:0; font-family:'Baloo 2',sans-serif; font-size:clamp(1.5rem,5vw,2.1rem); font-weight:800; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .sub{ font-weight:600; color:#3c6b3a; font-size:.85rem; margin-top:.15rem; }
+
+  .modeRow{ position:relative; z-index:2; display:flex; justify-content:center; gap:.4rem; margin-top:.85rem; }
+  .modePill{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.85rem; border:none; cursor:pointer;
+    border-radius:999px; padding:.45rem 1rem; background:rgba(255,255,255,.55); color:var(--ink);
+    box-shadow:0 3px 0 rgba(0,0,0,.12); transition:transform .1s, background .15s, color .15s;
+  }
+  .modePill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .modePill.active{ background:var(--pop); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.12), 0 0 0 3px rgba(255,255,255,.55); }
+
+  .baseSection{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.4rem; margin-top:.85rem; }
+  .baseLabel{ font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .baseRow{ display:flex; gap:.5rem; }
+  .basePill{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; width:2.7rem; height:2.7rem;
+    border:none; border-radius:999px; cursor:pointer; background:rgba(255,255,255,.6); color:var(--ink);
+    box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s;
+  }
+  .basePill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .basePill.active{ background:var(--pop); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px rgba(255,255,255,.55); }
+
+  .factEquation{ position:relative; z-index:2; text-align:center; margin-top:.65rem; }
+  .factEquation .eq{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.5rem; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .factEquation .eqSub{ font-size:.8rem; font-weight:600; color:#3c6b3a; margin-top:.1rem; }
+  body.theme-dragon .factEquation .eq, body.theme-star .factEquation .eq{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .factEquation .eqSub, body.theme-star .factEquation .eqSub{ color:#C9C2F0; }
+  body.theme-star .factEquation .eqSub{ color:#AEC4F0; }
+
+  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.7rem; }
+  .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
+  .resetbtn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; background:rgba(255,255,255,.72); border:none; border-radius:999px; padding:.4rem .9rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); color:var(--ink); }
+  .resetbtn:active{ transform:translateY(1px); }
+
+  /* ---------- the staircase ---------- */
+  .stairWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.4rem; padding:0 .8rem; }
+  .stairRow{
+    display:flex; align-items:flex-end; gap:.55rem; max-width:56rem; width:100%;
+    overflow-x:auto; padding:0 .3rem 1.1rem; scroll-behavior:smooth;
+  }
+  .stepCol{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; flex:0 0 auto; min-width:2.5rem; }
+
+  .poleRow{ display:flex; align-items:flex-end; gap:.22rem; min-height:3.6rem; margin-bottom:.15rem; }
+  .pole{ display:flex; flex-direction:column-reverse; align-items:center; gap:2px; }
+  .disk{
+    width:13px; height:13px; border-radius:50%; box-shadow:0 1px 2px rgba(0,0,0,.25);
+    opacity:0; transform:scale(.4); transition:opacity .28s ease, transform .28s cubic-bezier(.3,1.4,.4,1);
+  }
+  .disk.show{ opacity:1; transform:scale(1); }
+  .disk.ghost{ background:transparent; border:2px dashed rgba(255,255,255,.65); box-shadow:none; opacity:.85; transform:scale(1); animation:pulseGhost 1.3s ease-in-out infinite; }
+  @keyframes pulseGhost{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
+
+  .riser{
+    width:100%; border-radius:8px 8px 0 0; background:linear-gradient(180deg, var(--riser) 0%, var(--riser-dark) 100%);
+    box-shadow:0 3px 0 rgba(0,0,0,.16), inset 0 -8px 10px rgba(0,0,0,.14);
+    transition:height .4s cubic-bezier(.3,1.1,.4,1);
+  }
+  .riser.ghost{
+    background:rgba(255,255,255,.16); border:3px dashed rgba(255,255,255,.55); box-shadow:none;
+    animation:pulseGhost 1.3s ease-in-out infinite;
+  }
+  .riser.future{ background:rgba(255,255,255,.08); border:none; box-shadow:none; }
+
+  .stepFoot{ width:100%; height:8px; background:var(--riser-dark); border-radius:4px; margin-top:1px; }
+  .stepFoot.dim{ background:rgba(255,255,255,.15); }
+
+  .stepNum{
+    margin-top:.4rem; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.82rem;
+    color:rgba(255,255,255,.85); background:rgba(0,0,0,.12); border-radius:999px; padding:.06rem .5rem;
+  }
+  .stepNum.built{ background:rgba(255,255,255,.9); color:var(--ink); }
+  .stepNum.next{ background:var(--pop); color:#fff; }
+
+  .tapHint{ font-size:.6rem; font-weight:700; color:var(--pop); margin-top:.15rem; animation:bob 1s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+
+  .stepTag{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.62rem; color:var(--ink); background:#fff;
+    border-radius:999px; padding:.08rem .4rem; margin-bottom:.3rem; opacity:0; transform:translateY(4px);
+    transition:opacity .3s ease .1s, transform .3s ease .1s; white-space:nowrap;
+  }
+  .stepTag.show{ opacity:1; transform:translateY(0); }
+
+  .stepCol.tappable .riser, .stepCol.tappable .poleRow{ cursor:pointer; }
+
+  .levelnote{ position:relative; z-index:2; text-align:center; margin-top:.9rem; padding:0 1.2rem; font-size:.85rem; font-weight:600; color:#3c6b3a; min-height:1.2em; }
+  body.theme-dragon .levelnote, body.theme-star .levelnote{ color:#C9C2F0; }
+
+  .spark{ position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:80; }
+  .toast{
+    position:fixed; left:50%; top:14%; transform:translate(-50%,-14px); z-index:90;
+    background:var(--card); border:3px solid var(--pop); border-radius:18px; padding:.8rem 1.4rem;
+    font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--ink); text-align:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.22); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  .pickers{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:1.2rem; }
+  .pickerRow{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:center; }
+  .pickerLabel{ font-size:.62rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.2); }
+  .pill{ font-family:'Baloo 2',sans-serif; font-weight:700; border:none; cursor:pointer; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s; }
+  .pill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .themePill{ font-size:1.35rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
+  .themePill.active{ background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px var(--pop); }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🪜 Step Ladder</h1>
+  <div class="sub" id="subText">pick disks per pole, then build the staircase one step at a time</div>
+</header>
+
+<div class="modeRow">
+  <button class="modePill active" id="modeBuildBtn">🔨 Build it</button>
+  <button class="modePill" id="modeWatchBtn">▶️ Watch it</button>
+</div>
+
+<div class="baseSection">
+  <div class="baseLabel">how many disks on each pole?</div>
+  <div class="baseRow" id="baseRow"></div>
+</div>
+
+<div class="factEquation">
+  <div class="eq" id="eqText">tap the glowing step to begin</div>
+  <div class="eqSub" id="eqSub"></div>
+</div>
+
+<div class="topbar">
+  <button class="resetbtn" id="resetBtn">↺ Reset</button>
+  <button class="soundbtn" id="soundBtn" title="Toggle sound">🔊</button>
+</div>
+
+<div class="stairWrap"><div class="stairRow" id="stairRow"></div></div>
+
+<div class="levelnote" id="levelNote"></div>
+<div class="toast" id="toast"></div>
+
+<div class="pickers">
+  <div class="pickerRow"><span class="pickerLabel">choose your world</span></div>
+  <div class="pickerRow" id="themeRow"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const stairRow = $('stairRow'), levelNote = $('levelNote');
+const resetBtn = $('resetBtn'), soundBtn = $('soundBtn');
+
+/* ---------- themes: disk color + label only, mechanic never changes ---------- */
+const THEMES = {
+  apple:  { label:'Apples', emoji:'🍎', fill:'#E8583F', stroke:'#7A3020' },
+  dragon: { label:'Dragon eggs', emoji:'🥚', fill:'#FFC93C', stroke:'#8a6a12' },
+  star:   { label:'Stars', emoji:'⭐', fill:'#FFD54A', stroke:'#8a6a12' },
+};
+let theme = 'apple';
+let mode = 'build'; // 'build' | 'watch'
+
+/* ---------- model ----------
+   base   = disks per pole (1..5), picked by the header pills
+   step i = 1..10, the OTHER factor. Step i holds i poles, each with
+   `base` disks, so step i's total is base × i — the whole base× table,
+   laid out as an ascending staircase instead of one fact at a time. */
+let base = 3;
+let builtCount = 0;      // steps 1..builtCount are fully built
+let soundOn = true, actx;
+let watchTimers = [];
+let celebrated = false;
+
+const RISER_UNIT = 12;   // px per step of riser height
+const RISER_BASE = 18;   // px minimum riser height
+
+function nextStep(){ return builtCount + 1; } // 1-based; 11 means complete
+
+/* ---------- tiny synth ---------- */
+function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
+function tone(freq,dur,type,vol,delay){
+  if(!soundOn) return; ensureAudio();
+  const t0=actx.currentTime+(delay||0), osc=actx.createOscillator(), gain=actx.createGain();
+  osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0,t0); gain.gain.linearRampToValueAtTime(vol||.14,t0+.01);
+  gain.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  osc.connect(gain).connect(actx.destination); osc.start(t0); osc.stop(t0+dur+.02);
+}
+const sfxDisk = k => tone(360+k*16,.08,'triangle',.1);
+const sfxStep = i => tone(300+i*22,.16,'sine',.12);
+const sfxChime = () => [523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.09));
+soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
+
+/* ---------- build/reset ---------- */
+function resetAll(){
+  watchTimers.forEach(clearTimeout); watchTimers = [];
+  builtCount = 0;
+  celebrated = false;
+  render();
+  $('eqText').textContent = 'tap the glowing step to begin';
+  $('eqSub').textContent = '';
+  updateNote();
+}
+
+/* ---------- render the whole staircase from current state ---------- */
+function render(){
+  const t = THEMES[theme];
+  stairRow.innerHTML = '';
+  for (let i=1;i<=10;i++){
+    const col = document.createElement('div');
+    col.className = 'stepCol';
+    const isBuilt = i <= builtCount;
+    const isNext = i === nextStep() && mode === 'build';
+
+    const tag = document.createElement('div');
+    tag.className = 'stepTag' + (isBuilt ? ' show' : '');
+    tag.textContent = `${base}×${i}=${base*i}`;
+    col.appendChild(tag);
+
+    const poleRow = document.createElement('div');
+    poleRow.className = 'poleRow';
+    if (isBuilt || isNext){
+      for (let p=0;p<i;p++){
+        const pole = document.createElement('div');
+        pole.className = 'pole';
+        for (let d=0; d<base; d++){
+          const disk = document.createElement('div');
+          if (isBuilt){
+            disk.className = 'disk show';
+            disk.style.background = t.fill;
+            disk.style.border = `2px solid ${t.stroke}`;
+          } else {
+            disk.className = 'disk ghost';
+          }
+          pole.appendChild(disk);
+        }
+        poleRow.appendChild(pole);
+      }
+      col.style.minWidth = Math.max(40, i*17+14) + 'px';
+    }
+    col.appendChild(poleRow);
+
+    const riser = document.createElement('div');
+    riser.className = 'riser' + (isBuilt ? '' : isNext ? ' ghost' : ' future');
+    riser.style.height = (RISER_BASE + i*RISER_UNIT) + 'px';
+    col.appendChild(riser);
+
+    const foot = document.createElement('div');
+    foot.className = 'stepFoot' + (isBuilt ? '' : ' dim');
+    col.appendChild(foot);
+
+    const num = document.createElement('div');
+    num.className = 'stepNum' + (isBuilt ? ' built' : isNext ? ' next' : '');
+    num.textContent = i;
+    col.appendChild(num);
+
+    if (isNext){
+      col.classList.add('tappable');
+      if (mode === 'build'){
+        const hint = document.createElement('div');
+        hint.className = 'tapHint';
+        hint.textContent = '↑ tap';
+        col.appendChild(hint);
+        col.onclick = () => buildStep(i);
+      }
+    }
+
+    stairRow.appendChild(col);
+  }
+  if (nextStep() <= 10){
+    requestAnimationFrame(() => {
+      const target = stairRow.children[Math.max(0, nextStep()-1)];
+      if (target) target.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    });
+  }
+}
+
+/* ---------- advance the ladder by exactly one step ---------- */
+function buildStep(i){
+  if (i !== nextStep()) return;
+  builtCount = i;
+  sfxStep(i);
+  for (let k=0;k<i;k++) setTimeout(() => sfxDisk(k), k*40);
+  render();
+  $('eqText').textContent = `${base} × ${i} = ${base*i}`;
+  $('eqSub').textContent = `step ${i} of 10 — ${i} pole${i===1?'':'s'} of ${base} disk${base===1?'':'s'} each`;
+  updateNote();
+  if (builtCount === 10 && !celebrated){
+    celebrated = true;
+    setTimeout(celebrate, 250);
+  }
+}
+
+function updateNote(){
+  if (builtCount === 10){
+    levelNote.textContent = `the whole ${base}× table, one step at a time — 10 steps, 10 facts!`;
+  } else if (builtCount === 0){
+    levelNote.textContent = mode === 'build'
+      ? `tap step 1 to place the first pole`
+      : `watching the ${base}× table climb, step by step…`;
+  } else {
+    levelNote.textContent = mode === 'build'
+      ? `step ${builtCount} done — tap step ${builtCount+1} next`
+      : `step ${builtCount} of 10 built so far…`;
+  }
+}
+
+/* ---------- watch mode: same buildStep, just auto-triggered ---------- */
+function playWatch(){
+  watchTimers.forEach(clearTimeout); watchTimers = [];
+  builtCount = 0; celebrated = false;
+  render(); updateNote();
+  for (let i=1;i<=10;i++){
+    const t = setTimeout(() => buildStep(i), i*750);
+    watchTimers.push(t);
+  }
+}
+
+/* ---------- celebration ---------- */
+function celebrate(){
+  sfxChime();
+  showToast(`🪜 You built the whole ${base}× ladder!`);
+  fireworks();
+}
+function showToast(text){
+  const t = $('toast'); t.textContent = text; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function burst(cx, cy){
+  const cols_ = ['#FFC93C','#E85B4A','#4C8C3D','#8B6BD8','#4AC7E0','#fff'];
+  for (let i=0;i<26;i++){
+    const p = document.createElement('div');
+    p.className = 'spark';
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    p.style.background = cols_[(Math.random()*cols_.length)|0];
+    document.body.appendChild(p);
+    const a = Math.random()*Math.PI*2, d = 60+Math.random()*170;
+    const dx = Math.cos(a)*d, dy = Math.sin(a)*d - 60;
+    const dur = 750+Math.random()*450;
+    p.animate([
+      { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+      { transform:`translate(${dx}px,${dy+140}px) scale(.3)`, opacity:0 }
+    ], { duration:dur, easing:'cubic-bezier(.15,.7,.3,1)' });
+    setTimeout(()=>p.remove(), dur+30);
+  }
+}
+function fireworks(){
+  const rect = stairRow.getBoundingClientRect();
+  [0.2,0.5,0.8].forEach((frac,i) => {
+    setTimeout(() => burst(rect.left + rect.width*frac, rect.top + 20), i*220);
+  });
+}
+
+/* ---------- mode / picker wiring ---------- */
+function enterMode(newMode){
+  if (newMode === mode) return;
+  mode = newMode;
+  $('modeBuildBtn').classList.toggle('active', mode==='build');
+  $('modeWatchBtn').classList.toggle('active', mode==='watch');
+  $('subText').textContent = mode==='build'
+    ? 'pick disks per pole, then tap each glowing step to build it yourself'
+    : 'pick disks per pole, then sit back and watch the staircase climb';
+  resetBtn.textContent = mode==='build' ? '↺ Reset' : '↺ Replay';
+  runCurrentMode();
+}
+function runCurrentMode(){
+  if (mode === 'build') resetAll();
+  else playWatch();
+}
+$('modeBuildBtn').onclick = () => enterMode('build');
+$('modeWatchBtn').onclick = () => enterMode('watch');
+resetBtn.onclick = () => runCurrentMode();
+
+function buildPickers(){
+  const baseRow = $('baseRow');
+  baseRow.innerHTML = '';
+  for (let b=1;b<=5;b++){
+    const btn = document.createElement('button');
+    btn.className = 'basePill' + (b === base ? ' active' : '');
+    btn.textContent = b;
+    btn.onclick = () => selectBase(b);
+    baseRow.appendChild(btn);
+  }
+  const themeRow = $('themeRow');
+  themeRow.innerHTML = '';
+  Object.entries(THEMES).forEach(([key, t]) => {
+    const b = document.createElement('button');
+    b.className = 'pill themePill' + (key === theme ? ' active' : '');
+    b.textContent = t.emoji; b.title = t.label; b.setAttribute('aria-label', t.label);
+    b.onclick = () => selectTheme(key);
+    themeRow.appendChild(b);
+  });
+}
+function selectTheme(key){
+  if (key === theme) return;
+  theme = key;
+  document.body.className = theme === 'apple' ? '' : 'theme-' + theme;
+  buildPickers();
+  render();
+}
+function selectBase(b){
+  if (b === base) return;
+  base = b;
+  buildPickers();
+  runCurrentMode();
+}
+
+buildPickers();
+runCurrentMode();
+</script>
+</body>
+</html>
