@@ -39,7 +39,15 @@
   .stars{ display:flex; align-items:center; gap:.3rem; background:rgba(255,255,255,.72); backdrop-filter:blur(6px);
     border-radius:999px; padding:.35rem .8rem; font-weight:700; color:#7a5a12; font-size:.85rem; box-shadow:0 2px 0 rgba(0,0,0,.06); }
   .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
-
+ .backBtn{
+  position:absolute; top:.9rem; left:.9rem; z-index:3;
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.8rem;
+  text-decoration:none; color:var(--ink);
+  background:rgba(255,255,255,.72); border-radius:999px; padding:.4rem .8rem;
+  box-shadow:0 2px 0 rgba(0,0,0,.1);
+}
+.backBtn:active{ transform:translateY(1px); }
   .orderwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.9rem 1rem 0; }
   .order{ background:var(--card); border:3px solid var(--card-edge); border-radius:var(--radius); padding:.85rem 1.3rem;
     max-width:30rem; width:100%; text-align:center; box-shadow:0 8px 0 rgba(0,0,0,.08), 0 14px 24px rgba(0,0,0,.12);
@@ -116,7 +124,7 @@
 </style>
 </head>
 <body>
-
+<a class="backBtn" href="index.html">← Menu</a>
 <header>
   <h1>🧺 Basket Builder</h1>
   <div class="sub" id="subLine">fill baskets to fill the order</div>
