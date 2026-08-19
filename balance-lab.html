@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Balance Lab — spread the objects until every scale sits level</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#BFE9F7; --sky-bot:#EAF7E0; --grass:#8FC26A; --grass-dark:#6FA84C;
+    --ink:#33422E; --ink-soft:#5B6B54; --card:#FFFDF6; --card-edge:#EBE1C8;
+    --pop:#8B6BD8; --post:#9C8468; --post-dark:#75604A; --tray:#E8935A; --tray-dark:#C6713C;
+    --radius:22px;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; overflow-x:hidden; }
+  body{
+    font-family:'Quicksand',sans-serif; color:var(--ink);
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, var(--grass) 62%, var(--grass-dark) 100%);
+    min-height:100vh; padding-bottom:2rem; transition:background 1s ease; -webkit-user-select:none; user-select:none;
+  }
+  body.theme-dragon{ --sky-top:#2E2A4A; --sky-bot:#4A3B6B; --grass:#5B4A8A; --grass-dark:#3E3160; --pop:#FFC93C; --tray:#6B5497; --tray-dark:#4A3873; --post:#5B4A8A; --post-dark:#3E3160; }
+  body.theme-star{ --sky-top:#121F3D; --sky-bot:#243B6B; --grass:#2C4A82; --grass-dark:#1B2F5C; --pop:#FFC93C; --tray:#233A6E; --tray-dark:#182a52; --post:#2C4A82; --post-dark:#1B2F5C; }
+  body.theme-dragon h1, body.theme-star h1{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .sub, body.theme-star .sub{ color:#C9C2F0; } body.theme-star .sub{ color:#AEC4F0; }
+
+  header{ position:relative; z-index:2; text-align:center; padding:1.1rem 1rem .3rem; }
+  h1{ margin:0; font-family:'Baloo 2',sans-serif; font-size:clamp(1.5rem,5vw,2.1rem); font-weight:800; color:#2c5a2e; text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .sub{ font-weight:600; color:#3c6b3a; font-size:.85rem; margin-top:.15rem; }
+
+  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.6rem; }
+  .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
+  .resetbtn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; background:rgba(255,255,255,.72); border:none; border-radius:999px; padding:.4rem .9rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); color:var(--ink); }
+  .resetbtn:active{ transform:translateY(1px); }
+
+  /* ---------- pile: what hasn't been placed yet ---------- */
+  .pilewrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:1rem 1rem 0; }
+  .pile{
+    width:100%; max-width:30rem; min-height:4.4rem; background:rgba(255,255,255,.3); border:3px dashed rgba(255,255,255,.55);
+    border-radius:16px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.4rem; padding:.6rem;
+    transition:background .15s, border-color .15s;
+  }
+  .pile.dragover{ background:rgba(255,255,255,.5); border-color:#fff; }
+  .pile .item{ font-size:1.6rem; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); touch-action:none; }
+  .pilelabel{ text-align:center; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.15); margin-top:.3rem; }
+
+  /* ---------- the scale row ---------- */
+  .scalesWrap{ position:relative; z-index:2; display:flex; justify-content:center; margin-top:1.3rem; }
+  .scalesRow{ display:flex; align-items:flex-end; gap:1.4rem; padding:0 1rem; }
+  .scaleUnit{ display:flex; flex-direction:column; align-items:center; }
+  .track{
+    position:relative; width:96px; height:200px; display:flex; align-items:flex-end; justify-content:center;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.16) 0, rgba(255,255,255,.16) 1px, transparent 1px, transparent 20px);
+    border-left:2px dashed rgba(255,255,255,.3); border-right:2px dashed rgba(255,255,255,.3);
+    border-radius:6px 6px 0 0; transition:background .15s;
+  }
+  .track.dragover{ background:rgba(255,255,255,.28); }
+  .tray{
+    position:absolute; bottom:0; width:82px; min-height:34px; border-radius:8px 8px 4px 4px;
+    background:linear-gradient(180deg, var(--tray) 0%, var(--tray-dark) 100%);
+    box-shadow:0 4px 0 rgba(0,0,0,.18), inset 0 -6px 8px rgba(0,0,0,.16);
+    display:flex; flex-wrap:wrap; align-content:flex-start; justify-content:center; gap:.14rem;
+    padding:.3rem; transition:bottom .22s cubic-bezier(.3,.9,.4,1);
+  }
+  .tray .item{ font-size:1rem; touch-action:none; }
+  .post{ width:10px; height:100%; background:linear-gradient(180deg, var(--post) 0%, var(--post-dark) 100%); border-radius:3px; position:absolute; bottom:0; left:50%; margin-left:-5px; z-index:-1; }
+  .base{ width:118px; height:12px; border-radius:6px; background:var(--post-dark); box-shadow:0 3px 0 rgba(0,0,0,.2); margin-top:2px; }
+  .scaleLabel{ margin-top:.45rem; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; background:rgba(255,255,255,.75); border-radius:999px; padding:.08rem .65rem; }
+
+  /* ---------- drag ghost ---------- */
+  .item{ cursor:grab; }
+  .item.dragging{ opacity:.25; }
+  .ghost{
+    position:fixed; z-index:99; pointer-events:none; font-size:2rem;
+    filter:drop-shadow(0 6px 8px rgba(0,0,0,.35)); transform:translate(-50%,-50%) scale(1.15);
+  }
+
+  .levelnote{ position:relative; z-index:2; text-align:center; margin-top:1rem; padding:0 1.2rem; font-size:.85rem; font-weight:600; color:#3c6b3a; min-height:1.2em; }
+  .spark{ position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:80; }
+  .toast{
+    position:fixed; left:50%; top:14%; transform:translate(-50%,-14px); z-index:90;
+    background:var(--card); border:3px solid var(--tray); border-radius:18px; padding:.8rem 1.4rem;
+    font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--ink); text-align:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.22); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  .pickers{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:1.4rem; }
+  .pickerRow{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:center; }
+  .pickerLabel{ font-size:.62rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.2); }
+  .pill{ font-family:'Baloo 2',sans-serif; font-weight:700; border:none; cursor:pointer; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s; }
+  .pill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .themePill{ font-size:1.35rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
+  .themePill.active{ background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px var(--pop); }
+  .numPill{ font-size:.95rem; padding:.45rem 1rem; background:rgba(255,255,255,.55); color:var(--ink); }
+  .numPill.active{ background:var(--pop); color:#fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚖️ Balance Lab</h1>
+  <div class="sub">choose your objects and scales, then drag them onto the scales until every one sits level</div>
+</header>
+
+<div class="topbar">
+  <button class="resetbtn" id="resetBtn">↺ Reset</button>
+  <button class="soundbtn" id="soundBtn" title="Toggle sound">🔊</button>
+</div>
+
+<div class="pilewrap"><div class="pile" id="pile"></div></div>
+<div class="pilelabel"><span id="pileRemain">0</span> waiting to be placed — drag one onto a scale</div>
+
+<div class="scalesWrap"><div class="scalesRow" id="scalesRow"></div></div>
+
+<div class="levelnote" id="levelNote"></div>
+<div class="toast" id="toast"></div>
+
+<div class="pickers">
+  <div class="pickerRow"><span class="pickerLabel">choose your world</span></div>
+  <div class="pickerRow" id="themeRow"></div>
+  <div class="pickerRow"><span class="pickerLabel">how many objects?</span></div>
+  <div class="pickerRow" id="objRow"></div>
+  <div class="pickerRow"><span class="pickerLabel">how many scales?</span></div>
+  <div class="pickerRow" id="scaleRow"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pile = $('pile'), scalesRow = $('scalesRow'), levelNote = $('levelNote');
+const resetBtn = $('resetBtn'), soundBtn = $('soundBtn');
+
+/* ---------- themes: only the picture changes, never the mechanic ---------- */
+const THEMES = {
+  apple:  { label:'Apples', emoji:'🍎' },
+  dragon: { label:'Dragon eggs', emoji:'🥚' },
+  star:   { label:'Stars', emoji:'⭐' },
+};
+let theme = 'apple';
+let totalObjects = 9;   // child-chosen, 4..10
+let scaleCount = 3;     // child-chosen, 2..5
+let counts = [];        // items placed on each scale
+let soundOn = true, actx;
+
+const STEP = 18;       // px a tray sinks per item
+const TRACK_H = 200;   // must match .track height in CSS
+
+/* ---------- tiny synth: quiet taps only, no fanfare ---------- */
+function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
+function tone(freq,dur,type,vol,delay){
+  if(!soundOn) return; ensureAudio();
+  const t0=actx.currentTime+(delay||0), osc=actx.createOscillator(), gain=actx.createGain();
+  osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0,t0); gain.gain.linearRampToValueAtTime(vol||.14,t0+.01);
+  gain.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  osc.connect(gain).connect(actx.destination); osc.start(t0); osc.stop(t0+dur+.02);
+}
+const sfxPlace = n => tone(380+n*22,.08,'triangle',.11);
+const sfxRemove = () => tone(260,.08,'sine',.09);
+const sfxChime = () => [523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.09));
+soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
+
+/* ---------- setup / reset ---------- */
+function resetAll(){
+  counts = Array(scaleCount).fill(0);
+  celebrated = false;
+  render();
+}
+resetBtn.onclick = resetAll;
+
+function remaining(){
+  return totalObjects - counts.reduce((a,b)=>a+b,0);
+}
+
+function render(){
+  const t = THEMES[theme];
+
+  // pile
+  pile.innerHTML = '';
+  const rem = remaining();
+  for (let i=0;i<rem;i++){
+    const s = document.createElement('span');
+    s.className = 'item'; s.textContent = t.emoji;
+    makeDraggable(s, { from:'pile' });
+    pile.appendChild(s);
+  }
+  $('pileRemain').textContent = rem;
+
+  // scales
+  scalesRow.innerHTML = '';
+  counts.forEach((count, idx) => {
+    const unit = document.createElement('div');
+    unit.className = 'scaleUnit';
+    const track = document.createElement('div');
+    track.className = 'track';
+    track.dataset.scaleIdx = idx;
+
+    const post = document.createElement('div'); post.className = 'post';
+    const tray = document.createElement('div');
+    tray.className = 'tray';
+    tray.dataset.scaleIdx = idx;
+    const sinkPx = Math.min(count * STEP, TRACK_H - 34);
+    tray.style.bottom = (TRACK_H - 34 - sinkPx) + 'px';
+    for (let i=0;i<count;i++){
+      const it = document.createElement('span');
+      it.className = 'item'; it.textContent = t.emoji;
+      makeDraggable(it, { from:'scale', scaleIdx:idx });
+      tray.appendChild(it);
+    }
+    track.appendChild(post);
+    track.appendChild(tray);
+
+    const base = document.createElement('div'); base.className = 'base';
+    const label = document.createElement('div'); label.className = 'scaleLabel'; label.textContent = count;
+
+    unit.appendChild(track);
+    unit.appendChild(base);
+    unit.appendChild(label);
+    scalesRow.appendChild(unit);
+  });
+
+  updateNote();
+}
+
+/* ---------- drag and drop, via pointer events ----------
+   A child picks an object straight off the pile or a tray and physically
+   carries it to where it should go — the same motion as moving a real
+   apple — rather than tapping a target and trusting the app to do the
+   placing. A ghost copy follows the finger/cursor; the real item stays
+   put (dimmed) until the drag resolves, so nothing jumps around if the
+   drop misses. */
+let activeDrag = null;
+
+function makeDraggable(el, origin){
+  el.addEventListener('pointerdown', (e) => startDrag(e, el, origin));
+}
+
+function startDrag(e, el, origin){
+  e.preventDefault();
+  ensureAudio();
+  el.classList.add('dragging');
+  const ghost = document.createElement('span');
+  ghost.className = 'ghost';
+  ghost.textContent = el.textContent;
+  document.body.appendChild(ghost);
+  positionGhost(ghost, e.clientX, e.clientY);
+
+  activeDrag = { el, origin, ghost };
+
+  const move = (ev) => {
+    positionGhost(ghost, ev.clientX, ev.clientY);
+    updateDropHighlight(ev.clientX, ev.clientY);
+  };
+  const up = (ev) => {
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', up);
+    resolveDrop(ev.clientX, ev.clientY, origin);
+    ghost.remove();
+    clearDropHighlights();
+    activeDrag = null;
+  };
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up, { once:true });
+}
+
+function positionGhost(ghost, x, y){
+  ghost.style.left = x + 'px';
+  ghost.style.top = y + 'px';
+}
+
+function findDropTarget(x, y){
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const track = el.closest('.track');
+  if (track) return { type:'scale', idx: +track.dataset.scaleIdx };
+  const pileEl = el.closest('.pile');
+  if (pileEl) return { type:'pile' };
+  return null;
+}
+
+function updateDropHighlight(x, y){
+  clearDropHighlights();
+  const target = findDropTarget(x, y);
+  if (!target) return;
+  if (target.type === 'scale'){
+    const track = scalesRow.querySelector(`.track[data-scale-idx="${target.idx}"]`);
+    if (track) track.classList.add('dragover');
+  } else if (target.type === 'pile'){
+    pile.classList.add('dragover');
+  }
+}
+function clearDropHighlights(){
+  document.querySelectorAll('.track.dragover').forEach(t=>t.classList.remove('dragover'));
+  pile.classList.remove('dragover');
+}
+
+function resolveDrop(x, y, origin){
+  const target = findDropTarget(x, y);
+  if (!target){ render(); return; } // dropped nowhere valid — snap back as-is
+
+  if (target.type === 'scale'){
+    if (origin.from === 'pile'){
+      if (remaining() <= 0){ render(); return; }
+      counts[target.idx]++;
+      sfxPlace(counts[target.idx]);
+    } else if (origin.from === 'scale' && origin.scaleIdx !== target.idx){
+      counts[origin.scaleIdx]--;
+      counts[target.idx]++;
+      sfxPlace(counts[target.idx]);
+    }
+  } else if (target.type === 'pile'){
+    if (origin.from === 'scale'){
+      counts[origin.scaleIdx]--;
+      sfxRemove();
+    }
+    // dropping a pile item back on the pile is a no-op
+  }
+  render();
+}
+
+/* ---------- the read-out ----------
+   Plain and factual while things are still in progress — but the moment
+   every object is placed AND every scale sits at the same height, that's
+   a real, noticeable win, and it gets a real celebration: chimes and
+   fireworks. It only fires once per achievement (not on every re-render
+   while already level), and resets the moment the scales go uneven again
+   or the child pulls an object back out, so it can be re-earned. */
+let celebrated = false;
+function updateNote(){
+  const rem = remaining();
+  const allSame = counts.every(c => c === counts[0]);
+  const isLevel = rem === 0 && allSame && counts[0] > 0;
+
+  if (rem > 0){
+    levelNote.textContent = `${rem} still waiting — the scales won't all match until every object has a home`;
+  } else if (allSame){
+    levelNote.textContent = `every scale holds ${counts[0]} — they're level!`;
+  } else {
+    levelNote.textContent = `all placed, but the scales sit at different heights — try moving some around`;
+  }
+
+  if (isLevel && !celebrated){
+    celebrated = true;
+    celebrate();
+  } else if (!isLevel){
+    celebrated = false;
+  }
+}
+
+function celebrate(){
+  sfxChime();
+  showToast(`⚖️ Level! Every scale holds ${counts[0]}.`);
+  fireworks();
+}
+
+function showToast(text){
+  const t = $('toast'); t.textContent = text; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+function burst(cx, cy){
+  const cols_ = ['#FFC93C','#E85B4A','#4C8C3D','#8B6BD8','#4AC7E0','#fff'];
+  for (let i=0;i<26;i++){
+    const p = document.createElement('div');
+    p.className = 'spark';
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    p.style.background = cols_[(Math.random()*cols_.length)|0];
+    document.body.appendChild(p);
+    const a = Math.random()*Math.PI*2, d = 60+Math.random()*170;
+    const dx = Math.cos(a)*d, dy = Math.sin(a)*d - 60;
+    const dur = 750+Math.random()*450;
+    p.animate([
+      { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+      { transform:`translate(${dx}px,${dy+140}px) scale(.3)`, opacity:0 }
+    ], { duration:dur, easing:'cubic-bezier(.15,.7,.3,1)' });
+    setTimeout(()=>p.remove(), dur+30);
+  }
+}
+function fireworks(){
+  const rect = scalesRow.getBoundingClientRect();
+  const spots = [0.2, 0.5, 0.8];
+  spots.forEach((frac, i) => {
+    setTimeout(() => {
+      burst(rect.left + rect.width*frac, rect.top + 20);
+    }, i*220);
+  });
+}
+
+/* ---------- pickers ---------- */
+function buildPickers(){
+  const themeRow = $('themeRow');
+  themeRow.innerHTML = '';
+  Object.entries(THEMES).forEach(([key, t]) => {
+    const b = document.createElement('button');
+    b.className = 'pill themePill' + (key === theme ? ' active' : '');
+    b.textContent = t.emoji; b.title = t.label; b.setAttribute('aria-label', t.label);
+    b.onclick = () => selectTheme(key);
+    themeRow.appendChild(b);
+  });
+
+  const objRow = $('objRow');
+  objRow.innerHTML = '';
+  for (let n=4;n<=10;n++){
+    const b = document.createElement('button');
+    b.className = 'pill numPill' + (n === totalObjects ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => selectTotal(n);
+    objRow.appendChild(b);
+  }
+
+  const scaleRow = $('scaleRow');
+  scaleRow.innerHTML = '';
+  for (let n=2;n<=5;n++){
+    const b = document.createElement('button');
+    b.className = 'pill numPill' + (n === scaleCount ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => selectScales(n);
+    scaleRow.appendChild(b);
+  }
+}
+
+function selectTheme(key){
+  if (key === theme) return;
+  theme = key;
+  document.body.className = theme === 'apple' ? '' : 'theme-' + theme;
+  buildPickers();
+  render();
+}
+function selectTotal(n){
+  if (n === totalObjects) return;
+  totalObjects = n;
+  buildPickers();
+  resetAll();
+}
+function selectScales(n){
+  if (n === scaleCount) return;
+  scaleCount = n;
+  buildPickers();
+  resetAll();
+}
+
+buildPickers();
+resetAll();
+</script>
+</body>
+</html>
