@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Basket Builder — see multiplication grow, one group at a time</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#BFE9F7; --sky-bot:#EAF7E0;
+    --grass:#8FC26A; --grass-dark:#6FA84C;
+    --sun:#FFC93C; --sun-dark:#E8A61E;
+    --apple:#E85B4A; --apple-dark:#C63F30;
+    --pop:#8B6BD8; --ink:#33422E; --ink-soft:#5B6B54;
+    --card:#FFFDF6; --card-edge:#EBE1C8;
+    --basket:#C88A4A; --basket-dark:#9C6530;
+    --radius:22px;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; overflow-x:hidden; }
+  body{
+    font-family:'Quicksand',sans-serif; color:var(--ink);
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, var(--grass) 62%, var(--grass-dark) 100%);
+    min-height:100vh; padding-bottom:2rem; transition:background 1s ease;
+    -webkit-user-select:none; user-select:none;
+  }
+  body.theme-dragon{ --sky-top:#2E2A4A; --sky-bot:#4A3B6B; --grass:#5B4A8A; --grass-dark:#3E3160; --pop:#FFC93C; --basket:#5B3B7A; --basket-dark:#3E2758; }
+  body.theme-star{ --sky-top:#121F3D; --sky-bot:#243B6B; --grass:#2C4A82; --grass-dark:#1B2F5C; --pop:#FFC93C; --basket:#2C4A82; --basket-dark:#1B2F5C; }
+  body.theme-dragon h1, body.theme-star h1{ color:#E8E4FF; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  body.theme-dragon .sub, body.theme-star .sub{ color:#C9C2F0; }
+  body.theme-star .sub{ color:#AEC4F0; }
+
+  header{ position:relative; z-index:2; text-align:center; padding:1.1rem 1rem .3rem; }
+  h1{ margin:0; font-family:'Baloo 2',sans-serif; font-size:clamp(1.5rem,5vw,2.1rem); font-weight:800; color:#2c5a2e;
+      text-shadow:0 2px 0 rgba(255,255,255,.55); }
+  .sub{ font-weight:600; color:#3c6b3a; font-size:.85rem; margin-top:.15rem; }
+
+  .topbar{ position:relative; z-index:2; display:flex; justify-content:center; gap:.6rem; align-items:center; margin-top:.6rem; }
+  .stars{ display:flex; align-items:center; gap:.3rem; background:rgba(255,255,255,.72); backdrop-filter:blur(6px);
+    border-radius:999px; padding:.35rem .8rem; font-weight:700; color:#7a5a12; font-size:.85rem; box-shadow:0 2px 0 rgba(0,0,0,.06); }
+  .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
+
+  .orderwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.9rem 1rem 0; }
+  .order{ background:var(--card); border:3px solid var(--card-edge); border-radius:var(--radius); padding:.85rem 1.3rem;
+    max-width:30rem; width:100%; text-align:center; box-shadow:0 8px 0 rgba(0,0,0,.08), 0 14px 24px rgba(0,0,0,.12);
+    display:flex; align-items:center; gap:.8rem; }
+  .mascot{ font-size:2.1rem; flex-shrink:0; animation:hover 2.4s ease-in-out infinite; }
+  @keyframes hover{ 0%,100%{ transform:translateY(0) rotate(-4deg);} 50%{ transform:translateY(-5px) rotate(4deg);} }
+  .order-text{ text-align:left; }
+  .order-text .who{ font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+  .order-text .ask{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:clamp(1rem,3.4vw,1.3rem); color:var(--ink); line-height:1.25; }
+  .order-text .ask b{ color:var(--apple-dark); }
+
+  .eqwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.7rem 1rem 0; min-height:2.6rem; }
+  .eq{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:clamp(1rem,3.6vw,1.4rem); color:#3c6b3a;
+    background:rgba(255,255,255,.55); border-radius:999px; padding:.35rem 1.1rem; transition:transform .2s; }
+  .eq .final{ color:var(--apple-dark); }
+  .eq.pulse{ animation:eqpop .35s ease; }
+  @keyframes eqpop{ 0%{ transform:scale(1);} 40%{ transform:scale(1.12);} 100%{ transform:scale(1);} }
+
+  /* ---------- the field: a plain patch, baskets land on it one at a time ---------- */
+  .fieldwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.9rem 1rem 0; }
+  .field{
+    width:100%; max-width:38rem; min-height:11rem;
+    background:rgba(255,255,255,.28); border:3px dashed rgba(255,255,255,.5); border-radius:20px;
+    display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:center; gap:1rem;
+    padding:1.2rem 1rem .9rem;
+  }
+  .basket{ display:flex; flex-direction:column; align-items:center; gap:.35rem; opacity:0; transform:translateY(18px) scale(.7); animation:landBasket .38s cubic-bezier(.3,1.6,.4,1) forwards; }
+  @keyframes landBasket{ to{ opacity:1; transform:translateY(0) scale(1); } }
+  .basket-body{
+    width:82px; min-height:64px; border-radius:0 0 16px 16px; border-top:5px solid var(--basket-dark);
+    background:linear-gradient(180deg, var(--basket) 0%, var(--basket-dark) 100%);
+    display:flex; flex-wrap:wrap; align-content:flex-start; justify-content:center; gap:.15rem;
+    padding:.5rem .4rem; box-shadow:0 4px 0 rgba(0,0,0,.15), inset 0 -6px 10px rgba(0,0,0,.18);
+  }
+  .basket-body .item{ font-size:1.15rem; transform:scale(0); filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+  .basket-body .item.pop{ animation:itemPop .3s cubic-bezier(.3,1.8,.4,1) forwards; }
+  @keyframes itemPop{ 0%{ transform:scale(0) rotate(-20deg);} 60%{ transform:scale(1.3) rotate(6deg);} 100%{ transform:scale(1) rotate(0);} }
+  .basket-total{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.8rem; color:#3c6b3a;
+    background:rgba(255,255,255,.75); border-radius:999px; padding:.08rem .55rem; opacity:0; transition:opacity .25s; }
+  .basket-total.show{ opacity:1; }
+
+  .addwrap{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:1.2rem; }
+  button.big{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.05rem; color:#fff; background:var(--pop);
+    border:none; border-radius:999px; padding:.85rem 2rem; cursor:pointer; box-shadow:0 5px 0 rgba(0,0,0,.18); transition:transform .1s;
+  }
+  button.big:active{ transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
+  button.big:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+  .progresshint{ font-size:.78rem; font-weight:600; color:#3c6b3a; }
+
+  .controls{ position:relative; z-index:2; display:flex; justify-content:center; gap:.7rem; margin-top:.9rem; flex-wrap:wrap; }
+  button.action{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.9rem; padding:.6rem 1.3rem; border-radius:999px; border:none; cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.15); transition:transform .1s; }
+  button.action:active{ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.15); }
+  button.action:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+  .btn-flip{ background:var(--pop); color:#fff; }
+  .btn-next{ background:var(--sun); color:#6b4a06; }
+
+  .pickers{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:1.3rem; }
+  .pickerRow{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:center; }
+  .pickerLabel{ font-size:.62rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.2); }
+  .pill{ font-family:'Baloo 2',sans-serif; font-weight:700; border:none; cursor:pointer; border-radius:999px; box-shadow:0 3px 0 rgba(0,0,0,.14); transition:transform .1s, background .15s, color .15s; }
+  .pill:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .themePill{ font-size:1.35rem; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
+  .themePill.active{ background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.14), 0 0 0 3px var(--pop); }
+  .numPill{ font-size:.95rem; padding:.45rem 1rem; background:rgba(255,255,255,.55); color:var(--ink); }
+  .numPill.active{ background:var(--pop); color:#fff; }
+
+  .tip{ position:relative; z-index:2; text-align:center; margin-top:.8rem; padding:0 1.2rem; font-size:.85rem; font-weight:600; color:#3c6b3a; min-height:1.2em; }
+  .spark{ position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:50; }
+  .toast{ position:fixed; left:50%; top:14%; transform:translate(-50%,-14px); z-index:60; background:var(--card); border:3px solid var(--sun);
+    border-radius:18px; padding:.8rem 1.4rem; font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--ink); text-align:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.22); opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧺 Basket Builder</h1>
+  <div class="sub" id="subLine">fill baskets to fill the order</div>
+</header>
+
+<div class="topbar">
+  <div class="stars">🌻 <span id="doneCount">0</span> orders filled</div>
+  <button class="soundbtn" id="soundBtn" title="Toggle sound">🔊</button>
+</div>
+
+<div class="orderwrap">
+  <div class="order">
+    <div class="mascot" id="mascot">🐝</div>
+    <div class="order-text">
+      <div class="who" id="orderWho">Buzzby needs</div>
+      <div class="ask" id="orderText">…</div>
+    </div>
+  </div>
+</div>
+
+<div class="eqwrap"><div class="eq" id="eqLine">tap "add a basket" to start</div></div>
+
+<div class="fieldwrap"><div class="field" id="field"></div></div>
+
+<div class="addwrap">
+  <button class="big" id="addBtn">➕ <span id="addLabel">Add a basket</span></button>
+  <div class="progresshint" id="progressHint"></div>
+</div>
+
+<div class="controls">
+  <button class="action btn-flip" id="flipBtn" disabled>🔁 <span id="flipLabel">Try it the other way</span></button>
+  <button class="action btn-next" id="nextBtn">🌼 New order</button>
+</div>
+
+<div class="pickers">
+  <div class="pickerRow"><span class="pickerLabel">choose your world</span></div>
+  <div class="pickerRow" id="themeRow"></div>
+  <div class="pickerRow"><span class="pickerLabel">practise the table of…</span></div>
+  <div class="pickerRow" id="numRow"></div>
+</div>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const field = $('field'), orderText = $('orderText'), eqLine = $('eqLine'), tip = $('tip');
+const addBtn = $('addBtn'), flipBtn = $('flipBtn'), nextBtn = $('nextBtn'), soundBtn = $('soundBtn');
+
+/* ---------- themes ----------
+   Only the picture and words change: the container noun, the item, the
+   mascot. The counting mechanic underneath — one basket at a time, items
+   popping in one at a time inside it, the running total climbing — is
+   identical no matter which world is picked. */
+const THEMES = {
+  apple:  { label:'Apple baskets', emoji:'🍎', mascot:'🐝', who:'Buzzby needs',       verb:'basket', containerSing:'basket', harvestMsg:'All baskets filled!' },
+  dragon: { label:'Dragon nests',  emoji:'🥚', mascot:'🐉', who:"Tim's dragon needs", verb:'nest',   containerSing:'nest',   harvestMsg:'All nests hatched!' },
+  star:   { label:'Star jars',     emoji:'⭐', mascot:'🦉', who:'Luna needs',         verb:'jar',    containerSing:'jar',    harvestMsg:'All jars sparkling!' },
+};
+let theme = 'apple';
+let focusNumber = null;   // null = mixed, 1-5 = one table locked as the number of baskets
+
+let rows, cols, groupsDone, cumulative, doneCount = 0, animating = false;
+let soundOn = true;
+
+/* ---------- tiny synth ---------- */
+let actx;
+function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
+function tone(freq,dur,type,vol,delay){
+  if(!soundOn) return; ensureAudio();
+  const t0=actx.currentTime+(delay||0), osc=actx.createOscillator(), gain=actx.createGain();
+  osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0,t0); gain.gain.linearRampToValueAtTime(vol||.18,t0+.01);
+  gain.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  osc.connect(gain).connect(actx.destination); osc.start(t0); osc.stop(t0+dur+.02);
+}
+const sfxItem = i => tone(440+i*60,.09,'triangle',.13);
+const sfxBasket = () => tone(360,.12,'sine',.14);
+const sfxHarvest = () => [523,659,784,1047].forEach((f,i)=>tone(f,.16,'triangle',.16,i*.09));
+soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
+
+/* ---------- order generation ----------
+   With no table selected, both the basket count (rows) and the items per
+   basket (cols) vary 2-5. With a table selected, ROWS — the number of
+   baskets — is pinned to it every round, so "table of 3" always means
+   building exactly 3 baskets, with what's inside them varying: 3 baskets
+   of 2, of 4, of 5... which is what practising the 3s actually is. */
+let lastShape = '';
+function newOrder(){
+  let r, c;
+  if (focusNumber){
+    r = focusNumber;
+    do { c = 2 + Math.floor(Math.random()*4); } while ((r+'x'+c) === lastShape);
+  } else {
+    do { r = 2 + Math.floor(Math.random()*4); c = 2 + Math.floor(Math.random()*4); }
+    while ((r+'x'+c) === lastShape);
+  }
+  lastShape = r+'x'+c;
+  rows = r; cols = c; groupsDone = 0; cumulative = 0;
+  const t = THEMES[theme];
+  orderText.innerHTML = `<b>${rows} ${t.containerSing}${rows===1?'':'s'}</b> of <b>${cols}</b> ${t.emoji}`;
+  eqLine.textContent = `tap "add a ${t.containerSing}" to start`;
+  addBtn.disabled = false;
+  flipBtn.disabled = true;
+  $('addLabel').textContent = `Add a ${t.containerSing}`;
+  progressHint();
+  field.innerHTML = '';
+  tip.textContent = rows*cols <= 6 ? 'small order — count along!' : '';
+}
+
+function progressHint(){
+  $('progressHint').textContent = `${groupsDone} of ${rows} ${THEMES[theme].containerSing}${rows===1?'':'s'} so far`;
+}
+
+/* ---------- the incremental build ----------
+   One basket lands, then its items pop in one at a time with a short
+   stagger — that stagger is the whole point: a kid watches "1, 2, 3" go
+   into the basket rather than seeing a finished pile, so the counting
+   that IS multiplication is something they see happen, not something
+   they're told happened. Only once a basket is fully counted does the
+   running total (and the equation strip) move. */
+function addBasket(){
+  if (animating || groupsDone >= rows) return;
+  animating = true;
+  addBtn.disabled = true;
+  ensureAudio();
+  const t = THEMES[theme];
+
+  const basket = document.createElement('div');
+  basket.className = 'basket';
+  basket.innerHTML = `<div class="basket-body" id="bb${groupsDone}"></div><div class="basket-total" id="bt${groupsDone}"></div>`;
+  field.appendChild(basket);
+  sfxBasket();
+
+  const body = basket.querySelector('.basket-body');
+  let placed = 0;
+  const placeOne = () => {
+    const span = document.createElement('span');
+    span.className = 'item';
+    span.textContent = t.emoji;
+    body.appendChild(span);
+    requestAnimationFrame(() => span.classList.add('pop'));
+    sfxItem(placed);
+    placed++;
+    if (placed < cols){
+      setTimeout(placeOne, 180);
+    } else {
+      finishBasket();
+    }
+  };
+  setTimeout(placeOne, 120);
+
+  function finishBasket(){
+    groupsDone++;
+    cumulative += cols;
+    const totalEl = document.getElementById('bt'+(groupsDone-1));
+    totalEl.textContent = cumulative;
+    totalEl.classList.add('show');
+    updateEquation();
+    progressHint();
+    animating = false;
+    if (groupsDone >= rows){
+      harvest();
+    } else {
+      addBtn.disabled = false;
+    }
+  }
+}
+addBtn.onclick = addBasket;
+
+/* Live repeated-addition sentence: one "+ cols" term per finished basket,
+   collapsing into the multiplication only once every basket the order
+   asked for is done. */
+function updateEquation(){
+  const terms = Array(groupsDone).fill(cols).join(' + ');
+  if (groupsDone < rows){
+    eqLine.textContent = `${terms} = ${cumulative}   (so far)`;
+  } else {
+    eqLine.innerHTML = `${terms} <span style="opacity:.6">=</span> <span class="final">${rows} × ${cols} = ${cumulative}</span>`;
+  }
+  eqLine.classList.remove('pulse'); void eqLine.offsetWidth; eqLine.classList.add('pulse');
+}
+
+function harvest(){
+  const t = THEMES[theme];
+  sfxHarvest();
+  showToast(`🎉 ${rows} × ${cols} = ${cumulative}! ${t.harvestMsg}`);
+  burst();
+  doneCount++;
+  $('doneCount').textContent = doneCount;
+  flipBtn.disabled = false;
+  tip.textContent = `try it the other way — same total, different baskets`;
+}
+
+/* ---------- the flip: active rebuilding, not a passive animation ----------
+   Swaps rows/cols and hands the kid a fresh order to build themselves —
+   4 baskets of 3 instead of 3 baskets of 4. Watching a computer rearrange
+   the same items teaches less than counting it out again with your own
+   taps, so the "discovery" here is something the kid does twice, not
+   something shown to them once. */
+function flipOrder(){
+  [rows, cols] = [cols, rows];
+  groupsDone = 0; cumulative = 0;
+  const t = THEMES[theme];
+  orderText.innerHTML = `<b>${rows} ${t.containerSing}${rows===1?'':'s'}</b> of <b>${cols}</b> ${t.emoji}`;
+  eqLine.textContent = `tap "add a ${t.containerSing}" to start`;
+  field.innerHTML = '';
+  addBtn.disabled = false;
+  flipBtn.disabled = true;
+  progressHint();
+  tip.textContent = `now build it as ${rows} ${t.containerSing}${rows===1?'':'s'} — same total, wait and see!`;
+}
+flipBtn.onclick = flipOrder;
+nextBtn.onclick = newOrder;
+
+/* ---------- picker rows ---------- */
+function buildPickers(){
+  const themeRow = $('themeRow');
+  themeRow.innerHTML = '';
+  Object.entries(THEMES).forEach(([key, t]) => {
+    const b = document.createElement('button');
+    b.className = 'pill themePill' + (key === theme ? ' active' : '');
+    b.textContent = t.emoji;
+    b.title = t.label;
+    b.setAttribute('aria-label', t.label);
+    b.onclick = () => selectTheme(key);
+    themeRow.appendChild(b);
+  });
+  const numRow = $('numRow');
+  numRow.innerHTML = '';
+  const mixBtn = document.createElement('button');
+  mixBtn.className = 'pill numPill' + (focusNumber === null ? ' active' : '');
+  mixBtn.textContent = 'mix';
+  mixBtn.onclick = () => selectNumber(null);
+  numRow.appendChild(mixBtn);
+  [1,2,3,4,5].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'pill numPill' + (focusNumber === n ? ' active' : '');
+    b.textContent = n;
+    b.title = `Only the ${n} times table`;
+    b.onclick = () => selectNumber(n);
+    numRow.appendChild(b);
+  });
+}
+
+function applyThemeChrome(){
+  const t = THEMES[theme];
+  $('mascot').textContent = t.mascot;
+  $('orderWho').textContent = t.who;
+  $('flipLabel').textContent = 'Try it the other way';
+  $('subLine').textContent = `fill ${t.containerSing}s to fill the order`;
+  document.body.className = theme === 'apple' ? '' : 'theme-' + theme;
+}
+
+function selectTheme(key){
+  if (key === theme || animating) return;
+  theme = key;
+  lastShape = '';
+  buildPickers();
+  applyThemeChrome();
+  newOrder();
+}
+function selectNumber(n){
+  if (n === focusNumber || animating) return;
+  focusNumber = n;
+  lastShape = '';
+  buildPickers();
+  newOrder();
+}
+
+function showToast(text){
+  const t = $('toast'); t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1700);
+}
+function burst(){
+  const cols_ = ['#FFC93C','#E85B4A','#4C8C3D','#8B6BD8','#fff'];
+  const rect = field.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  for (let i=0;i<28;i++){
+    const p = document.createElement('div');
+    p.className = 'spark';
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    p.style.background = cols_[(Math.random()*cols_.length)|0];
+    document.body.appendChild(p);
+    const a = Math.random()*Math.PI*2, d = 60+Math.random()*160;
+    const dx = Math.cos(a)*d, dy = Math.sin(a)*d - 40;
+    const dur = 700+Math.random()*400;
+    p.animate([
+      { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+      { transform:`translate(${dx}px,${dy+120}px) scale(.3)`, opacity:0 }
+    ], { duration:dur, easing:'cubic-bezier(.15,.7,.3,1)' });
+    setTimeout(()=>p.remove(), dur+30);
+  }
+}
+
+buildPickers();
+applyThemeChrome();
+newOrder();
+</script>
+</body>
+</html>
