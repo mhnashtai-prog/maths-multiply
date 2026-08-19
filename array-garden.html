@@ -79,7 +79,15 @@
     background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px;
     font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06);
   }
-
+.backBtn{
+  position:absolute; top:.9rem; left:.9rem; z-index:3;
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.8rem;
+  text-decoration:none; color:var(--ink);
+  background:rgba(255,255,255,.72); border-radius:999px; padding:.4rem .8rem;
+  box-shadow:0 2px 0 rgba(0,0,0,.1);
+}
+.backBtn:active{ transform:translateY(1px); }
   /* ---------- order card ---------- */
   .orderwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.9rem 1rem 0; }
   .order{
@@ -161,7 +169,7 @@
 </style>
 </head>
 <body>
-
+<a class="backBtn" href="index.html">← Menu</a>
 <div class="sun"></div>
 <div class="cloud c1"><svg viewBox="0 0 100 50" fill="#fff"><ellipse cx="30" cy="30" rx="26" ry="16"/><ellipse cx="55" cy="24" rx="20" ry="14"/><ellipse cx="72" cy="32" rx="18" ry="12"/></svg></div>
 <div class="cloud c2"><svg viewBox="0 0 100 50" fill="#fff"><ellipse cx="30" cy="30" rx="26" ry="16"/><ellipse cx="55" cy="24" rx="20" ry="14"/></svg></div>
