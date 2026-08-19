@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Arruma em Grupos — Professora Catarina Ferreiras</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cork:#C99A66; --cork-dark:#A97A47;
+    --board:#2E4D3B; --board-dark:#233B2E;
+    --chalk:#F7F3E6;
+    --paper:#FFFCF3; --paper-edge:#E8DEC4;
+    --ink:#33422E; --ink-soft:#5B6B54;
+    --yellow:#F2C94C; --coral:#E85B4A; --blue:#3E7CB1; --green:#5B8C4A; --purple:#8B6BD8;
+    --radius:16px;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:'Quicksand',sans-serif; color:var(--ink);
+    background:
+      radial-gradient(circle at 12% 18%, rgba(0,0,0,.05) 0 3px, transparent 4px),
+      radial-gradient(circle at 78% 8%, rgba(0,0,0,.05) 0 3px, transparent 4px),
+      radial-gradient(circle at 34% 62%, rgba(0,0,0,.045) 0 3px, transparent 4px),
+      radial-gradient(circle at 88% 55%, rgba(0,0,0,.05) 0 3px, transparent 4px),
+      radial-gradient(circle at 55% 88%, rgba(0,0,0,.045) 0 3px, transparent 4px),
+      radial-gradient(circle at 6% 82%, rgba(0,0,0,.05) 0 3px, transparent 4px),
+      linear-gradient(160deg, var(--cork) 0%, var(--cork-dark) 100%);
+    background-attachment:fixed;
+    min-height:100vh; overflow-x:hidden;
+    -webkit-user-select:none; user-select:none;
+  }
+
+  svg.defs{ position:absolute; width:0; height:0; }
+
+  .signWrap{ display:flex; justify-content:center; padding-top:1.2rem; }
+  .sign{
+    position:relative; width:min(92vw, 460px);
+    background:linear-gradient(180deg, var(--board) 0%, var(--board-dark) 100%);
+    border-radius:16px; padding:.85rem 1.1rem .75rem;
+    box-shadow:0 7px 0 rgba(0,0,0,.18), 0 12px 18px rgba(0,0,0,.26);
+    text-align:center;
+  }
+  .sign::before, .sign::after{
+    content:''; position:absolute; top:-18px; width:8px; height:22px;
+    background:linear-gradient(180deg,#caa572,#8c6238); border-radius:3px;
+  }
+  .sign::before{ left:16%; transform:rotate(-6deg); }
+  .sign::after{ right:16%; transform:rotate(6deg); }
+  h1{
+    margin:0; font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--chalk);
+    font-size:clamp(1.25rem,5vw,1.7rem); line-height:1.1;
+  }
+  .backLink{
+    display:inline-flex; align-items:center; gap:.3rem; margin-top:.5rem;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.72rem; text-decoration:none;
+    color:var(--chalk); opacity:.85; border:1.5px solid var(--chalk); border-radius:999px; padding:.2rem .7rem;
+  }
+  .backLink:hover{ opacity:1; }
+
+  .stageWrap{
+    max-width:640px; margin:1.1rem auto 0; padding:0 1rem 2rem; position:relative;
+  }
+
+  /* -------- Phase 1: messy pile -------- */
+  #messyPhase{
+    background:var(--paper); border:1px solid var(--paper-edge); border-radius:var(--radius);
+    box-shadow:0 8px 16px rgba(60,40,15,.22); padding:1.1rem 1rem 1.4rem; text-align:center;
+    position:relative; min-height:230px;
+  }
+  .messyTitle{ font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--board); font-size:1.05rem; margin:0 0 .8rem; }
+  #pileArea{ position:relative; height:160px; margin-bottom:.9rem; }
+  .pileItem{ position:absolute; font-size:1.9rem; filter:url(#sketchy); }
+  .clickBtn{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; color:#fff;
+    background:var(--coral); border:none; border-radius:999px; padding:.7rem 1.8rem;
+    box-shadow:0 4px 0 #a53c2f; cursor:pointer;
+  }
+  .clickBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #a53c2f; }
+
+  /* -------- Phase 2: sorting -------- */
+  #sortPhase{ display:none; }
+  .promptBar{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; color:var(--board);
+    font-size:.95rem; margin-bottom:.7rem; min-height:1.3em;
+  }
+  #trayArea{
+    background:var(--paper); border:1px solid var(--paper-edge); border-radius:var(--radius);
+    box-shadow:0 6px 12px rgba(60,40,15,.2); padding:.8rem; position:relative;
+    height:140px; margin-bottom:1rem;
+  }
+  .trayLabel{ position:absolute; top:6px; left:12px; font-size:.66rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
+  .obj{
+    position:absolute; font-size:2rem; touch-action:none; cursor:grab; filter:url(#sketchy);
+    transition:transform .15s ease;
+    width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  }
+  .obj.dragging{ cursor:grabbing; z-index:50; transition:none; filter:none; }
+  .obj.placed{ position:static; width:auto; height:auto; font-size:1.5rem; margin:2px; }
+
+  #containersRow{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(90px,1fr)); gap:.8rem;
+  }
+  .container{
+    background:var(--paper); border:2.5px dashed var(--paper-edge); border-radius:14px;
+    min-height:100px; padding:.5rem .4rem .4rem; text-align:center; position:relative;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .container.over{ border-color:var(--coral); background:#FFF7EE; }
+  .container.full{ border-style:solid; border-color:var(--green); }
+  .containerLabel{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.72rem; color:var(--ink-soft); margin-bottom:.3rem; }
+  .containerItems{ display:flex; flex-wrap:wrap; justify-content:center; gap:2px; flex:1; align-items:center; }
+  .countBadge{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.85rem; color:var(--board);
+    background:var(--yellow); border-radius:999px; padding:.05rem .5rem; margin-top:.35rem;
+  }
+
+  .actionRow{ display:flex; justify-content:center; gap:.6rem; margin-top:1rem; }
+  .miniBtn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.8rem; color:var(--board);
+    background:#fff; border:1.5px solid var(--paper-edge); border-radius:999px; padding:.45rem 1rem;
+    cursor:pointer;
+  }
+  .miniBtn:active{ transform:translateY(1px); }
+
+  /* -------- Frenzy celebration -------- */
+  #frenzyOverlay{
+    display:none; position:absolute; inset:0; align-items:center; justify-content:center;
+    flex-direction:column; text-align:center; z-index:80; pointer-events:none;
+  }
+  #frenzyOverlay.show{ display:flex; pointer-events:auto; }
+  .frenzyCard{
+    background:var(--paper); border-radius:20px; padding:1.4rem 1.6rem; box-shadow:0 14px 30px rgba(0,0,0,.3);
+    animation:pop .4s ease;
+  }
+  @keyframes pop{ 0%{ transform:scale(.6); opacity:0; } 60%{ transform:scale(1.08); opacity:1;} 100%{ transform:scale(1);} }
+  .frenzyTitle{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.5rem; color:var(--board); margin:0 0 .4rem; }
+  .frenzySub{ font-size:.9rem; font-weight:700; color:var(--ink-soft); margin:0 0 1rem; }
+  .confetti{
+    position:absolute; top:-10px; width:10px; height:10px; border-radius:2px; opacity:0;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    0%{ opacity:1; transform:translateY(0) rotate(0deg); }
+    100%{ opacity:1; transform:translateY(340px) rotate(540deg); }
+  }
+  .bounce{ animation:bounceUp .6s ease; }
+  @keyframes bounceUp{ 0%,100%{ transform:translateY(0);} 30%{ transform:translateY(-14px);} 55%{ transform:translateY(0);} 75%{ transform:translateY(-6px);} }
+
+  @media (prefers-reduced-motion: reduce){
+    .obj, .frenzyCard, .confetti, .bounce{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="defs">
+  <filter id="sketchy" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6"/>
+  </filter>
+</svg>
+
+<div class="signWrap">
+  <div class="sign">
+    <h1>🧺 Arruma em Grupos</h1>
+    <a class="backLink" href="index.html">← Voltar ao placard</a>
+  </div>
+</div>
+
+<div class="stageWrap">
+
+  <div id="messyPhase">
+    <p class="messyTitle">Ena, que confusão! 😵</p>
+    <div id="pileArea"></div>
+    <button class="clickBtn" id="clickBtn">Clica!</button>
+  </div>
+
+  <div id="sortPhase">
+    <p class="promptBar" id="promptBar"></p>
+    <div id="trayArea"><span class="trayLabel">Por arrumar</span></div>
+    <div id="containersRow"></div>
+    <div class="actionRow">
+      <button class="miniBtn" id="resetBtn">↺ Recomeçar</button>
+    </div>
+  </div>
+
+  <div id="frenzyOverlay">
+    <div class="frenzyCard">
+      <p class="frenzyTitle">Boa! Grupos iguais! 🎉</p>
+      <p class="frenzySub" id="frenzyDetail"></p>
+      <button class="clickBtn" id="againBtn">Outra vez!</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var OBJECT_SETS = [
+    ['⚽','🔴','🏀','🎾'],
+    ['🍪','🍬','🧁','🍭'],
+    ['🔵','🟢','🟡','🟣']
+  ];
+  var CONTAINER_COUNTS = [2,3,4];
+  var PER_GROUP = [2,3,4,5];
+
+  var pileArea = document.getElementById('pileArea');
+  var messyPhase = document.getElementById('messyPhase');
+  var sortPhase = document.getElementById('sortPhase');
+  var clickBtn = document.getElementById('clickBtn');
+  var trayArea = document.getElementById('trayArea');
+  var containersRow = document.getElementById('containersRow');
+  var promptBar = document.getElementById('promptBar');
+  var resetBtn = document.getElementById('resetBtn');
+  var frenzyOverlay = document.getElementById('frenzyOverlay');
+  var frenzyDetail = document.getElementById('frenzyDetail');
+  var againBtn = document.getElementById('againBtn');
+
+  var round = null;
+
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function newRound(){
+    var emoji = rand(OBJECT_SETS)[0];
+    var containers = rand(CONTAINER_COUNTS);
+    var perGroup = rand(PER_GROUP);
+    var total = containers * perGroup;
+    round = { emoji: emoji, containers: containers, perGroup: perGroup, total: total, placed: {} };
+
+    frenzyOverlay.classList.remove('show');
+    sortPhase.style.display = 'none';
+    messyPhase.style.display = 'block';
+    pileArea.innerHTML = '';
+
+    for (var i=0;i<total;i++){
+      var d = document.createElement('div');
+      d.className = 'pileItem';
+      d.textContent = emoji;
+      var x = 8 + Math.random()*84;
+      var y = 8 + Math.random()*76;
+      d.style.left = x+'%';
+      d.style.top = y+'%';
+      d.style.transform = 'rotate('+(Math.random()*70-35)+'deg)';
+      pileArea.appendChild(d);
+    }
+  }
+
+  clickBtn.addEventListener('click', function(){
+    messyPhase.style.display = 'none';
+    sortPhase.style.display = 'block';
+    buildSortPhase();
+  });
+
+  function buildSortPhase(){
+    promptBar.textContent = 'Arrasta os objetos e faz ' + round.containers + ' grupos iguais!';
+    trayArea.innerHTML = '<span class="trayLabel">Por arrumar</span>';
+    containersRow.innerHTML = '';
+    round.placed = {};
+
+    var cols = round.containers;
+    for (var c=0;c<cols;c++){
+      var box = document.createElement('div');
+      box.className = 'container';
+      box.dataset.idx = c;
+      box.innerHTML = '<div class="containerLabel">Cesto '+(c+1)+'</div><div class="containerItems"></div><div class="countBadge">0</div>';
+      containersRow.appendChild(box);
+      round.placed[c] = [];
+    }
+
+    var trayW = trayArea.clientWidth || 300;
+    var trayH = trayArea.clientHeight || 140;
+    for (var i=0;i<round.total;i++){
+      var obj = document.createElement('div');
+      obj.className = 'obj';
+      obj.textContent = round.emoji;
+      obj.dataset.id = 'o'+i;
+      var x = 10 + Math.random()*(trayW-70);
+      var y = 26 + Math.random()*(trayH-70);
+      obj.style.left = x+'px';
+      obj.style.top = y+'px';
+      trayArea.appendChild(obj);
+      makeDraggable(obj);
+    }
+  }
+
+  function makeDraggable(obj){
+    var offX=0, offY=0, dragging=false;
+
+    obj.addEventListener('pointerdown', function(e){
+      if (obj.classList.contains('placed')) return;
+      dragging = true;
+      obj.classList.add('dragging');
+      obj.setPointerCapture(e.pointerId);
+      var rect = obj.getBoundingClientRect();
+      offX = e.clientX - rect.left;
+      offY = e.clientY - rect.top;
+      document.body.appendChild(obj);
+      obj.style.position = 'fixed';
+      obj.style.left = rect.left+'px';
+      obj.style.top = rect.top+'px';
+      obj.style.width = rect.width+'px';
+      obj.style.height = rect.height+'px';
+    });
+
+    obj.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      obj.style.left = (e.clientX - offX)+'px';
+      obj.style.top = (e.clientY - offY)+'px';
+      highlightTarget(e.clientX, e.clientY);
+    });
+
+    obj.addEventListener('pointerup', function(e){
+      if (!dragging) return;
+      dragging = false;
+      obj.classList.remove('dragging');
+      clearHighlights();
+      var target = dropTarget(e.clientX, e.clientY);
+      if (target){
+        placeInContainer(obj, target);
+      } else {
+        returnToTray(obj);
+      }
+    });
+  }
+
+  function highlightTarget(x,y){
+    clearHighlights();
+    var els = document.elementsFromPoint(x,y);
+    for (var i=0;i<els.length;i++){
+      if (els[i].classList && els[i].classList.contains('container')){
+        els[i].classList.add('over');
+        break;
+      }
+    }
+  }
+  function clearHighlights(){
+    var overs = document.querySelectorAll('.container.over');
+    overs.forEach(function(o){ o.classList.remove('over'); });
+  }
+
+  function dropTarget(x,y){
+    var els = document.elementsFromPoint(x,y);
+    for (var i=0;i<els.length;i++){
+      if (els[i].classList && els[i].classList.contains('container')) return els[i];
+    }
+    return null;
+  }
+
+  function returnToTray(obj){
+    obj.style.position = 'absolute';
+    var trayRect = trayArea.getBoundingClientRect();
+    var trayW = trayArea.clientWidth || 300;
+    var trayH = trayArea.clientHeight || 140;
+    var x = Math.max(6, Math.min(trayW-46, 10 + Math.random()*(trayW-70)));
+    var y = Math.max(24, Math.min(trayH-46, 26 + Math.random()*(trayH-70)));
+    obj.style.left = x+'px';
+    obj.style.top = y+'px';
+    obj.style.width = '40px';
+    obj.style.height = '40px';
+    trayArea.appendChild(obj);
+  }
+
+  function placeInContainer(obj, containerEl){
+    var idx = containerEl.dataset.idx;
+    obj.classList.add('placed');
+    obj.style.position = 'static';
+    obj.style.left = ''; obj.style.top = '';
+    obj.style.width = ''; obj.style.height = '';
+    var itemsWrap = containerEl.querySelector('.containerItems');
+    itemsWrap.appendChild(obj);
+
+    obj.addEventListener('pointerdown', function backOut(e){
+      obj.classList.remove('placed');
+      obj.removeEventListener('pointerdown', backOut);
+      updateCount(containerEl);
+      var rect = obj.getBoundingClientRect();
+      obj.style.position='fixed';
+      obj.style.left = rect.left+'px'; obj.style.top = rect.top+'px';
+      obj.style.width = '40px'; obj.style.height = '40px';
+      document.body.appendChild(obj);
+      makeDraggable(obj);
+      obj.dispatchEvent(new PointerEvent('pointerdown', {clientX:e.clientX, clientY:e.clientY, pointerId:e.pointerId, bubbles:true}));
+    }, {once:true});
+
+    updateCount(containerEl);
+    checkComplete();
+  }
+
+  function updateCount(containerEl){
+    var n = containerEl.querySelectorAll('.obj.placed').length;
+    containerEl.querySelector('.countBadge').textContent = n;
+    containerEl.classList.toggle('full', n === round.perGroup);
+  }
+
+  function checkComplete(){
+    var boxes = containersRow.querySelectorAll('.container');
+    var allPlaced = document.querySelectorAll('#trayArea .obj').length === 0;
+    if (!allPlaced) return;
+
+    var counts = [];
+    boxes.forEach(function(b){ counts.push(b.querySelectorAll('.obj.placed').length); });
+    var equal = counts.every(function(c){ return c === counts[0] && c > 0; });
+
+    if (equal){
+      celebrate(counts[0], boxes.length);
+    } else {
+      promptBar.textContent = 'Quase! Os grupos não estão iguais... tenta trocar alguns!';
+      boxes.forEach(function(b){
+        b.style.borderColor = 'var(--coral)';
+        setTimeout(function(){ if(!b.classList.contains('full')) b.style.borderColor=''; }, 700);
+      });
+    }
+  }
+
+  function celebrate(perGroup, containers){
+    frenzyDetail.textContent = round.total + ' objetos, ' + containers + ' cestos, ' + perGroup + ' em cada!';
+    frenzyOverlay.classList.add('show');
+    spawnConfetti();
+    document.querySelectorAll('.container.full').forEach(function(b){
+      b.classList.add('bounce');
+    });
+  }
+
+  function spawnConfetti(){
+    var colors = ['#E85B4A','#F2C94C','#3E7CB1','#5B8C4A','#8B6BD8'];
+    var count = 40;
+    for (var i=0;i<count;i++){
+      (function(i){
+        setTimeout(function(){
+          var c = document.createElement('div');
+          c.className = 'confetti';
+          c.style.left = (Math.random()*100)+'%';
+          c.style.background = colors[Math.floor(Math.random()*colors.length)];
+          c.style.animationDuration = (0.9+Math.random()*0.8)+'s';
+          c.style.borderRadius = Math.random()>0.5 ? '50%' : '2px';
+          frenzyOverlay.appendChild(c);
+          setTimeout(function(){ c.remove(); }, 2000);
+        }, i*30);
+      })(i);
+    }
+  }
+
+  resetBtn.addEventListener('click', function(){
+    var trayObjs = document.querySelectorAll('.obj');
+    trayObjs.forEach(function(o){ o.remove(); });
+    buildSortPhase();
+  });
+
+  againBtn.addEventListener('click', function(){
+    newRound();
+  });
+
+  newRound();
+})();
+</script>
+
+</body>
+</html>
