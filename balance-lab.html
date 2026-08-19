@@ -52,7 +52,16 @@
   .soundbtn{ background:rgba(255,255,255,.72); border:none; border-radius:999px; width:34px; height:34px; font-size:1rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); }
   .resetbtn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.82rem; background:rgba(255,255,255,.72); border:none; border-radius:999px; padding:.4rem .9rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.06); color:var(--ink); }
   .resetbtn:active{ transform:translateY(1px); }
-
+.backBtn{
+  position:absolute; top:.9rem; left:.9rem; z-index:3;
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-family:'Baloo 2',sans-serif; font-weight:700; font-size:.8rem;
+  text-decoration:none; color:var(--ink);
+  background:rgba(255,255,255,.72); border-radius:999px; padding:.4rem .8rem;
+  box-shadow:0 2px 0 rgba(0,0,0,.1);
+}
+.backBtn:active{ transform:translateY(1px); }
+  
   /* ---------- pile: what hasn't been placed yet ---------- */
   .pilewrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:1rem 1rem 0; }
   .pile{
@@ -117,7 +126,7 @@
 </style>
 </head>
 <body>
-
+<a class="backBtn" href="index.html">← Menu</a>
 <header>
   <h1>⚖️ Balance Lab</h1>
   <div class="sub">pick how many bags, then pick a times-table fact — drag apples until every bag matches</div>
