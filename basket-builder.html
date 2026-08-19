@@ -58,7 +58,6 @@
   .eq.pulse{ animation:eqpop .35s ease; }
   @keyframes eqpop{ 0%{ transform:scale(1);} 40%{ transform:scale(1.12);} 100%{ transform:scale(1);} }
 
-  /* ---------- the field: a plain patch, baskets land on it one at a time ---------- */
   .fieldwrap{ position:relative; z-index:2; display:flex; justify-content:center; margin:.9rem 1rem 0; }
   .field{
     width:100%; max-width:38rem; min-height:11rem;
@@ -167,23 +166,17 @@ const $ = id => document.getElementById(id);
 const field = $('field'), orderText = $('orderText'), eqLine = $('eqLine'), tip = $('tip');
 const addBtn = $('addBtn'), flipBtn = $('flipBtn'), nextBtn = $('nextBtn'), soundBtn = $('soundBtn');
 
-/* ---------- themes ----------
-   Only the picture and words change: the container noun, the item, the
-   mascot. The counting mechanic underneath — one basket at a time, items
-   popping in one at a time inside it, the running total climbing — is
-   identical no matter which world is picked. */
 const THEMES = {
   apple:  { label:'Apple baskets', emoji:'🍎', mascot:'🐝', who:'Buzzby needs',       verb:'basket', containerSing:'basket', harvestMsg:'All baskets filled!' },
   dragon: { label:'Dragon nests',  emoji:'🥚', mascot:'🐉', who:"Tim's dragon needs", verb:'nest',   containerSing:'nest',   harvestMsg:'All nests hatched!' },
   star:   { label:'Star jars',     emoji:'⭐', mascot:'🦉', who:'Luna needs',         verb:'jar',    containerSing:'jar',    harvestMsg:'All jars sparkling!' },
 };
 let theme = 'apple';
-let focusNumber = null;   // null = mixed, 1-5 = one table locked as the number of baskets
+let focusNumber = null;
 
 let rows, cols, groupsDone, cumulative, doneCount = 0, animating = false;
 let soundOn = true;
 
-/* ---------- tiny synth ---------- */
 let actx;
 function ensureAudio(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }
 function tone(freq,dur,type,vol,delay){
@@ -199,12 +192,6 @@ const sfxBasket = () => tone(360,.12,'sine',.14);
 const sfxHarvest = () => [523,659,784,1047].forEach((f,i)=>tone(f,.16,'triangle',.16,i*.09));
 soundBtn.onclick = () => { soundOn=!soundOn; soundBtn.textContent = soundOn?'🔊':'🔇'; if(soundOn) ensureAudio(); };
 
-/* ---------- order generation ----------
-   With no table selected, both the basket count (rows) and the items per
-   basket (cols) vary 2-5. With a table selected, ROWS — the number of
-   baskets — is pinned to it every round, so "table of 3" always means
-   building exactly 3 baskets, with what's inside them varying: 3 baskets
-   of 2, of 4, of 5... which is what practising the 3s actually is. */
 let lastShape = '';
 function newOrder(){
   let r, c;
@@ -232,13 +219,6 @@ function progressHint(){
   $('progressHint').textContent = `${groupsDone} of ${rows} ${THEMES[theme].containerSing}${rows===1?'':'s'} so far`;
 }
 
-/* ---------- the incremental build ----------
-   One basket lands, then its items pop in one at a time with a short
-   stagger — that stagger is the whole point: a kid watches "1, 2, 3" go
-   into the basket rather than seeing a finished pile, so the counting
-   that IS multiplication is something they see happen, not something
-   they're told happened. Only once a basket is fully counted does the
-   running total (and the equation strip) move. */
 function addBasket(){
   if (animating || groupsDone >= rows) return;
   animating = true;
@@ -288,9 +268,6 @@ function addBasket(){
 }
 addBtn.onclick = addBasket;
 
-/* Live repeated-addition sentence: one "+ cols" term per finished basket,
-   collapsing into the multiplication only once every basket the order
-   asked for is done. */
 function updateEquation(){
   const terms = Array(groupsDone).fill(cols).join(' + ');
   if (groupsDone < rows){
@@ -312,12 +289,6 @@ function harvest(){
   tip.textContent = `try it the other way — same total, different baskets`;
 }
 
-/* ---------- the flip: active rebuilding, not a passive animation ----------
-   Swaps rows/cols and hands the kid a fresh order to build themselves —
-   4 baskets of 3 instead of 3 baskets of 4. Watching a computer rearrange
-   the same items teaches less than counting it out again with your own
-   taps, so the "discovery" here is something the kid does twice, not
-   something shown to them once. */
 function flipOrder(){
   [rows, cols] = [cols, rows];
   groupsDone = 0; cumulative = 0;
@@ -333,7 +304,6 @@ function flipOrder(){
 flipBtn.onclick = flipOrder;
 nextBtn.onclick = newOrder;
 
-/* ---------- picker rows ---------- */
 function buildPickers(){
   const themeRow = $('themeRow');
   themeRow.innerHTML = '';
