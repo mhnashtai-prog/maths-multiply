@@ -68,7 +68,17 @@ button:focus-visible, [tabindex]:focus-visible{
   background:rgba(255,255,255,.08); color:var(--cream); padding:8px 14px;
   border-radius:999px; font-weight:700; font-size:.95rem; display:flex; align-items:center; gap:6px;
 }
-.hud-back:hover{background:rgba(255,255,255,.16);}
+  
+  .hud-back:hover{background:rgba(255,255,255,.16);}
+.return-home{
+  position:fixed; top:14px; left:14px; z-index:30;
+  background:rgba(255,255,255,.08); color:var(--cream); text-decoration:none;
+  padding:8px 14px; border-radius:999px; font-weight:700; font-size:.95rem;
+  border:1px solid rgba(255,255,255,.12);
+  display:flex; align-items:center; gap:6px;
+  transition:background .15s ease;
+}
+.return-home:hover{ background:rgba(255,255,255,.16); }
 .hud-stats{display:flex; gap:10px; flex-wrap:wrap;}
 .pill{
   background:rgba(255,255,255,.08); border-radius:999px; padding:7px 14px;
@@ -254,6 +264,7 @@ footer.credit{text-align:center; opacity:.4; font-size:.75rem; padding:10px; fon
 <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
 <div id="app">
+  <a href="index.html" class="return-home" aria-label="Voltar à página principal">⟵ Voltar</a>
   <div class="hud" id="hud" hidden>
     <button class="hud-back" id="btnBack">⟵ Menu</button>
     <div class="hud-stats">
